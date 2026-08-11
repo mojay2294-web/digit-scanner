@@ -1,0 +1,25 @@
+{
+  "name": "Deriv Digit Scanner Pro",
+  "short_name": "Digit Scanner",
+  "description": "Deriv digit scanner with Over 1, Under 8 and Over 2 strategies and auto-trader.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0d13",
+  "theme_color": "#0a0d13",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
