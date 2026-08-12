@@ -317,7 +317,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 .trading-stats-compact .grid2{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:5px}
 .trading-stats-compact .stat{padding:5px 7px !important;min-height:0}
 .trading-stats-compact .stat .small{font-size:7px !important;white-space:nowrap}
-.trading-stats-compact .stat .stat-value{margin-top:1px !important;font-size:11px !important}
+.trading-stats-compact .stat .stat-value{margin-top:1px !important;font-size:11px !important}.activity-panel{border:1px solid var(--border);border-radius:10px;background:var(--well);overflow:hidden}.activity-title{padding:7px 9px;border-bottom:1px solid var(--border);font-size:8px;font-weight:800;letter-spacing:.08em;color:var(--faint)}.trade-activity{max-height:210px;overflow-y:auto}.activity-empty{padding:10px 9px;font-size:10px;color:var(--faint);text-align:center}.activity-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 9px;border-bottom:1px solid var(--border);font-size:9px}.activity-row:last-child{border-bottom:0}.activity-contract{font-weight:800;font-family:var(--mono)}.activity-meta{margin-top:2px;color:var(--faint);font-size:8px}.activity-result{font-family:var(--mono);font-weight:900;text-align:right}.activity-result.win{color:var(--good)}.activity-result.loss{color:var(--bad)}
 
 
 /* ===== Compact scanner layout ===== */
@@ -409,16 +409,6 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   }
 
 </style>
-
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0a0d13">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Digit Scanner">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-
 </head>
 <body>
 
@@ -456,7 +446,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 
 <div class="card scanner-section">
 <h2>1. Over 1 / Under 8 / Over 2 Trigger Scanner</h2>
-<div class="section-note">OVER 1: digits 0 and 1 below 10%, at least 5 digits from 2–9 above 10%, and the highest digit percentage above 11%. UNDER 8: digits 8 and 9 below 10%, at least 5 digits from 0–7 above 10%, and the highest digit percentage above 11%. AUTO ENTRY: OVER 1 trades when the cursor touches 0 and 1 consecutively in either order (0→1 or 1→0). UNDER 8 trades when the cursor touches 8 and 9 consecutively in either order (8→9 or 9→8). All existing percentage and market-selection conditions remain unchanged.</div><div class="tablewrap"><table>
+<div class="section-note">OVER 1: digits 0 and 1 below 10%, at least 5 digits from 2–9 above 10%, and the highest digit percentage above 11%. UNDER 8: digits 8 and 9 below 10%, at least 5 digits from 0–7 above 10%, and the highest digit percentage above 11%. Auto entry waits for the cursor to exit the excluded pair, then touch 3 consecutive digits in the allowed range.</div><div class="tablewrap"><table>
 <thead><tr><th>Market (Symbol)</th><th>Symbol</th><th>Exact Price</th><th>0%</th><th>1%</th><th>2%</th><th>3%</th><th>4%</th><th>5%</th><th>6%</th><th>7%</th><th>8%</th><th>9%</th><th>Odd%</th><th>Even%</th><th>Status</th></tr></thead>
 <tbody id="body012"><tr><td colspan="9">Connect first.</td></tr></tbody>
 </table></div>
@@ -486,7 +476,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   <div class="small" id="strategy2State">Strategy 2 · UNDER 8 · WAITING</div>
   <div class="small" id="strategy3State">Strategy 3 · OVER 2 · WAITING</div>
 </div>
-<div class="small" style="margin-top:8px">Strategy 1: DIGITOVER · Barrier: 1 · 1 tick · Trigger: 0↔1 consecutive &nbsp; | &nbsp; Strategy 2: DIGITUNDER · Barrier: 8 · 1 tick · Trigger: 8↔9 consecutive &nbsp; | &nbsp; Strategy 3: DIGITOVER · Barrier: 2 · 1 tick</div><div class="small" style="margin-top:5px">Strategy 3 rapid-spike filter: avoids entry when any of digits 0–2 rises by more than 2 percentage points in the recent half-window versus the preceding half-window.</div>
+<div class="small" style="margin-top:8px">Strategy 1: DIGITOVER · Barrier: 1 · 1 tick &nbsp; | &nbsp; Strategy 2: DIGITUNDER · Barrier: 8 · 1 tick &nbsp; | &nbsp; Strategy 3: DIGITOVER · Barrier: 2 · 1 tick</div><div class="small" style="margin-top:5px">Strategy 3 rapid-spike filter: avoids entry when any of digits 0–2 rises by more than 2 percentage points in the recent half-window versus the preceding half-window.</div>
 </div>
 
 
@@ -495,12 +485,12 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 <div class="grid2">
   <div class="stat"><div class="small">NO. OF TRADES</div><div id="statTrades" class="stat-value">0</div></div>
   <div class="stat"><div class="small">SESSION EARNINGS</div><div id="statEarnings" class="stat-value">USD 0.00</div></div>
-  <div class="stat"><div class="small">CONTRACT RESULT</div><div id="statContractWon" class="stat-value">USD 0.00</div></div>
 </div>
 <div class="grid2" style="margin-top:6px">
   <div class="stat"><div class="small">TRADES WON</div><div id="statWon" class="stat-value">0</div></div>
   <div class="stat"><div class="small">TRADES LOST</div><div id="statLost" class="stat-value">0</div></div>
 </div>
+<div class="activity-panel" style="margin-top:10px"><div class="activity-title">ACTIVITY</div><div id="tradeActivity" class="trade-activity"><div class="activity-empty">No contracts taken yet.</div></div></div>
 </div>
 
 <div class="card digit-counts-card">
@@ -545,7 +535,8 @@ let trading={inFlight:false};let selectedAccountId='';let activeTradeMeta=null;
 let autoTradingEnabled=false;
 let autoState={s1:{},s2:{},s3:{}};
 let accountBalance=null,accountCurrency='USD',sessionStartBalance=null;
-let tradeStats={trades:0,won:0,lost:0,lastContractResult:0};
+let tradeStats={trades:0,won:0,lost:0};
+let tradeActivity=[];
 let aiState={wins:0,losses:0,confidenceFloor:75,history:{},strategyHistory:{},marketHistory:{},cooldowns:{},historyLoading:false,historyReqs:{},historyLoadedMarkets:0,autoHistoryStarted:false,historyBatches:{}};
 try{const saved=JSON.parse(localStorage.getItem('deriv_ai_history_v1')||'null');if(saved&&typeof saved==='object')aiState.history=saved;}catch(e){}
 try{const saved2=JSON.parse(localStorage.getItem('deriv_ai_strategy_history_v2')||'null');if(saved2&&typeof saved2==='object')aiState.strategyHistory=saved2;}catch(e){}
@@ -559,22 +550,14 @@ const MIN_CONFIDENCE_FOR_TRADE=70;
 
 function log(s,t='log'){const box=$('log');if(!box)return;const d=document.createElement('div');d.className='log '+t;d.textContent=new Date().toLocaleTimeString()+' '+s;box.appendChild(d);while(box.children.length>250)box.removeChild(box.firstElementChild);box.scrollTop=box.scrollHeight}
 function updateTradeStats(){
-  const trades=$('statTrades'),won=$('statWon'),lost=$('statLost'),earn=$('statEarnings'),contractWon=$('statContractWon');
-  if(trades)trades.textContent=tradeStats.trades;
-  if(won)won.textContent=tradeStats.won;
-  if(lost)lost.textContent=tradeStats.lost;
-  if(earn){
-    const e=(accountBalance!==null&&sessionStartBalance!==null)?accountBalance-sessionStartBalance:0;
-    earn.textContent=(e>=0?'+':'-')+accountCurrency+' '+Math.abs(e).toFixed(2);
-    earn.classList.toggle('profit',e>0);
-    earn.classList.toggle('loss',e<0);
-  }
-  if(contractWon){
-    const r=Number(tradeStats.lastContractResult||0);
-    contractWon.textContent=(r>=0?'+':'-')+accountCurrency+' '+Math.abs(r).toFixed(2);
-    contractWon.classList.toggle('profit',r>0);
-    contractWon.classList.toggle('loss',r<0);
-  }
+  const trades=$('statTrades'),won=$('statWon'),lost=$('statLost'),earn=$('statEarnings');
+  if(trades)trades.textContent=tradeStats.trades; if(won)won.textContent=tradeStats.won; if(lost)lost.textContent=tradeStats.lost;
+  if(earn){const e=(accountBalance!==null&&sessionStartBalance!==null)?accountBalance-sessionStartBalance:0; earn.textContent=(e>=0?'+':'-')+accountCurrency+' '+Math.abs(e).toFixed(2); earn.classList.toggle('profit',e>0); earn.classList.toggle('loss',e<0);}
+  renderTradeActivity();
+}
+function renderTradeActivity(){
+  const box=$('tradeActivity'); if(!box)return; if(!tradeActivity.length){box.innerHTML='<div class="activity-empty">No contracts taken yet.</div>';return;}
+  box.innerHTML=tradeActivity.map(a=>{const r=Number(a.profit||0),cls=r>=0?'win':'loss',sign=r>=0?'+':'-',name=a.contract==='DIGITUNDER'?'UNDER 8':a.contract==='DIGITOVER'?'OVER '+a.barrier:a.contract,time=new Date(a.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}); return `<div class="activity-row"><div><div class="activity-contract">${name} · ${a.symbol}</div><div class="activity-meta">${time} · Stake ${accountCurrency} ${Number(a.stake||0).toFixed(2)}</div></div><div class="activity-result ${cls}">${r>=0?'WON':'LOST'}<br>${sign}${accountCurrency} ${Math.abs(r).toFixed(2)}</div></div>`;}).join('');
 }
 
 function send(x){if(!ws||ws.readyState!==WebSocket.OPEN)return null;x.req_id=++req;ws.send(JSON.stringify(x));return x.req_id}
@@ -1143,8 +1126,8 @@ function updateStrategyStates(){
   const a=m1?(autoState.s1[m1.x.code]||{stage:0,count:0}):null;
   const b=m2?(autoState.s2[m2.x.code]||{stage:0,count:0}):null;
   const c=m3?(autoState.s3[m3.x.code]||{lastDigit:null}):null;
-  setStrategyState('s1',!m1?'WAITING · no qualifying market':a.lastDigit===0||a.lastDigit===1?'QUALIFIED · WATCHING '+m1.x.code+' FOR 0↔1':'QUALIFIED · WAITING FOR 0↔1 · '+m1.x.code);
-  setStrategyState('s2',!m2?'WAITING · no qualifying market':b.lastDigit===8||b.lastDigit===9?'QUALIFIED · WATCHING '+m2.x.code+' FOR 8↔9':'QUALIFIED · WAITING FOR 8↔9 · '+m2.x.code);
+  setStrategyState('s1',!m1?'WAITING · no qualifying market':a.stage===1?'EXITED 0/1 · '+a.count+'/3 DIGITS · '+m1.x.code:'QUALIFIED · WAITING TO EXIT 0/1 · '+m1.x.code);
+  setStrategyState('s2',!m2?'WAITING · no qualifying market':b.stage===1?'EXITED 8/9 · '+b.count+'/3 DIGITS · '+m2.x.code:'QUALIFIED · WAITING TO EXIT 8/9 · '+m2.x.code);
   setStrategyState('s3',!m3?'WAITING · no qualifying market':c.lastDigit===0||c.lastDigit===2?'QUALIFIED · WATCHING '+m3.x.code+' FOR 0/2 → 1':'QUALIFIED · WAITING FOR 0/2 → 1 · '+m3.x.code);
 }
 function autoTradingReady(){return !!(autoTradingEnabled&&tradeWS&&tradeWS.readyState===WebSocket.OPEN&&selectedAccountId)}
@@ -1168,30 +1151,26 @@ function strategy1Tick(x,d){
   const code=x.code,st=strategyStats(x);
   const s=autoState.s1[code]||(autoState.s1[code]={lastDigit:null});
   if(!st||!st.over1Ok){s.lastDigit=d;return}
-  if((s.lastDigit===0&&d===1)||(s.lastDigit===1&&d===0)){
-    const best=bestAutoMarket('s1');
-    if(best&&best.x.code===code){
-      placeAutoTrade('s1',x);
-      delete autoState.s1[code];
-      return;
-    }
+  if(s.stage===0){
+    if(d===0||d===1){s.stage=1;s.count=0;}
+  }else{
+    if(d>=2&&d<=9){s.count++;if(s.count>=3){const best=bestAutoMarket('s1');if(best&&best.x.code===code){placeAutoTrade('s1',x);delete autoState.s1[code];return}s.stage=0;s.count=0;}}
+    else if(d===0||d===1){s.count=0;}
+    else{s.stage=0;s.count=0;}
   }
-  s.lastDigit=d;
 }
 function strategy2Tick(x,d){
   if(!strategyAllowed('s2'))return;
   const code=x.code,st=strategyStats(x);
-  const s=autoState.s2[code]||(autoState.s2[code]={lastDigit:null});
-  if(!st||!st.under8Ok){s.lastDigit=d;return}
-  if((s.lastDigit===8&&d===9)||(s.lastDigit===9&&d===8)){
-    const best=bestAutoMarket('s2');
-    if(best&&best.x.code===code){
-      placeAutoTrade('s2',x);
-      delete autoState.s2[code];
-      return;
-    }
+  const s=autoState.s2[code]||(autoState.s2[code]={stage:0,count:0});
+  if(!st||!st.under8Ok){s.stage=0;s.count=0;return}
+  if(s.stage===0){
+    if(d===8||d===9){s.stage=1;s.count=0;}
+  }else{
+    if(d>=0&&d<=7){s.count++;if(s.count>=3){const best=bestAutoMarket('s2');if(best&&best.x.code===code){placeAutoTrade('s2',x);delete autoState.s2[code];return}s.stage=0;s.count=0;}}
+    else if(d===8||d===9){s.count=0;}
+    else{s.stage=0;s.count=0;}
   }
-  s.lastDigit=d;
 }
 function weakDigitsSpikingRapidly(x){
   if(!x||x.digits.length<nTicks())return true;
@@ -1400,7 +1379,7 @@ function handleTrade(m){
   const c=m.proposal_open_contract;
   if(c.is_sold||c.status==='sold'||c.is_expired){
     const profit=Number(c.profit||0); const payout=Number(c.payout||0); const label=profit>=0?'WIN':'LOSS';
-     tradeStats.trades++; if(profit>=0){tradeStats.won++;}else tradeStats.lost++; tradeStats.lastContractResult=profit; updateTradeStats();
+     tradeStats.trades++; if(profit>=0){tradeStats.won++;}else tradeStats.lost++; tradeActivity.unshift({time:Date.now(),strategy:activeTradeMeta.strategy,symbol:activeTradeMeta.symbol,stake:activeTradeMeta.stake,contract:activeTradeMeta.contract,barrier:activeTradeMeta.barrier,profit}); if(tradeActivity.length>100)tradeActivity.pop(); updateTradeStats();
     log('AUTO TRADE '+label+' · '+activeTradeMeta.strategy.toUpperCase()+' · '+activeTradeMeta.symbol+' · P/L '+profit.toFixed(2),profit>=0?'success':'error');
     $('autoStatus').textContent='READY · last '+label+' · waiting for new trigger';
     trading.inFlight=false;activeTradeMeta=null;
@@ -1447,20 +1426,5 @@ $('autoStake').onchange=()=>{if(Number($('autoStake').value)<0.35)$('autoStake')
 updateStrategyStates();
 window.addEventListener('beforeunload',()=>{if(accountBalancePoll)clearInterval(accountBalancePoll);clearPublicPing();if(tradePing)clearInterval(tradePing);if(tradeReconnectTimer)clearTimeout(tradeReconnectTimer);try{if(ws)ws.close()}catch(e){}try{if(tradeWS)tradeWS.close()}catch(e){}});
 </script>
-
-
-
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=3', { scope: './' })
-      .catch(function (err) {
-        console.warn('PWA service worker registration failed:', err);
-      });
-  });
-}
-</script>
-
 </body>
 </html>
