@@ -456,7 +456,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 
 <div class="card scanner-section">
 <h2>1. Over 1 / Under 8 / Over 2 Trigger Scanner</h2>
-<div class="section-note">OVER 1: digits 0 and 1 below 10%, at least 5 digits from 2–9 above 10%, and the highest digit percentage above 11%. UNDER 8: digits 8 and 9 below 10%, at least 5 digits from 0–7 above 10%, and the highest digit percentage above 11%. Auto entry waits for the cursor to exit the excluded pair, then touch 3 consecutive digits in the allowed range.</div><div class="tablewrap"><table>
+<div class="section-note">OVER 1: digits 0 and 1 below 10%, at least 5 digits from 2–9 above 10%, and the highest digit percentage above 11%. UNDER 8: digits 8 and 9 below 10%, at least 5 digits from 0–7 above 10%, and the highest digit percentage above 11%. AUTO ENTRY: OVER 1 trades when the cursor touches 0 and 1 consecutively in either order (0→1 or 1→0). UNDER 8 trades when the cursor touches 8 and 9 consecutively in either order (8→9 or 9→8). All existing percentage and market-selection conditions remain unchanged.</div><div class="tablewrap"><table>
 <thead><tr><th>Market (Symbol)</th><th>Symbol</th><th>Exact Price</th><th>0%</th><th>1%</th><th>2%</th><th>3%</th><th>4%</th><th>5%</th><th>6%</th><th>7%</th><th>8%</th><th>9%</th><th>Odd%</th><th>Even%</th><th>Status</th></tr></thead>
 <tbody id="body012"><tr><td colspan="9">Connect first.</td></tr></tbody>
 </table></div>
@@ -486,7 +486,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   <div class="small" id="strategy2State">Strategy 2 · UNDER 8 · WAITING</div>
   <div class="small" id="strategy3State">Strategy 3 · OVER 2 · WAITING</div>
 </div>
-<div class="small" style="margin-top:8px">Strategy 1: DIGITOVER · Barrier: 1 · 1 tick &nbsp; | &nbsp; Strategy 2: DIGITUNDER · Barrier: 8 · 1 tick &nbsp; | &nbsp; Strategy 3: DIGITOVER · Barrier: 2 · 1 tick</div><div class="small" style="margin-top:5px">Strategy 3 rapid-spike filter: avoids entry when any of digits 0–2 rises by more than 2 percentage points in the recent half-window versus the preceding half-window.</div>
+<div class="small" style="margin-top:8px">Strategy 1: DIGITOVER · Barrier: 1 · 1 tick · Trigger: 0↔1 consecutive &nbsp; | &nbsp; Strategy 2: DIGITUNDER · Barrier: 8 · 1 tick · Trigger: 8↔9 consecutive &nbsp; | &nbsp; Strategy 3: DIGITOVER · Barrier: 2 · 1 tick</div><div class="small" style="margin-top:5px">Strategy 3 rapid-spike filter: avoids entry when any of digits 0–2 rises by more than 2 percentage points in the recent half-window versus the preceding half-window.</div>
 </div>
 
 
@@ -1143,8 +1143,8 @@ function updateStrategyStates(){
   const a=m1?(autoState.s1[m1.x.code]||{stage:0,count:0}):null;
   const b=m2?(autoState.s2[m2.x.code]||{stage:0,count:0}):null;
   const c=m3?(autoState.s3[m3.x.code]||{lastDigit:null}):null;
-  setStrategyState('s1',!m1?'WAITING · no qualifying market':a.stage===1?'EXITED 0/1 · '+a.count+'/3 DIGITS · '+m1.x.code:'QUALIFIED · WAITING TO EXIT 0/1 · '+m1.x.code);
-  setStrategyState('s2',!m2?'WAITING · no qualifying market':b.stage===1?'EXITED 8/9 · '+b.count+'/3 DIGITS · '+m2.x.code:'QUALIFIED · WAITING TO EXIT 8/9 · '+m2.x.code);
+  setStrategyState('s1',!m1?'WAITING · no qualifying market':a.lastDigit===0||a.lastDigit===1?'QUALIFIED · WATCHING '+m1.x.code+' FOR 0↔1':'QUALIFIED · WAITING FOR 0↔1 · '+m1.x.code);
+  setStrategyState('s2',!m2?'WAITING · no qualifying market':b.lastDigit===8||b.lastDigit===9?'QUALIFIED · WATCHING '+m2.x.code+' FOR 8↔9':'QUALIFIED · WAITING FOR 8↔9 · '+m2.x.code);
   setStrategyState('s3',!m3?'WAITING · no qualifying market':c.lastDigit===0||c.lastDigit===2?'QUALIFIED · WATCHING '+m3.x.code+' FOR 0/2 → 1':'QUALIFIED · WAITING FOR 0/2 → 1 · '+m3.x.code);
 }
 function autoTradingReady(){return !!(autoTradingEnabled&&tradeWS&&tradeWS.readyState===WebSocket.OPEN&&selectedAccountId)}
@@ -1166,28 +1166,32 @@ async function placeAutoTrade(strategy,market){
 function strategy1Tick(x,d){
   if(!strategyAllowed('s1'))return;
   const code=x.code,st=strategyStats(x);
-  const s=autoState.s1[code]||(autoState.s1[code]={stage:0,count:0});
-  if(!st||!st.over1Ok){s.stage=0;s.count=0;return}
-  if(s.stage===0){
-    if(d===0||d===1){s.stage=1;s.count=0;}
-  }else{
-    if(d>=2&&d<=9){s.count++;if(s.count>=3){const best=bestAutoMarket('s1');if(best&&best.x.code===code){placeAutoTrade('s1',x);delete autoState.s1[code];return}s.stage=0;s.count=0;}}
-    else if(d===0||d===1){s.count=0;}
-    else{s.stage=0;s.count=0;}
+  const s=autoState.s1[code]||(autoState.s1[code]={lastDigit:null});
+  if(!st||!st.over1Ok){s.lastDigit=d;return}
+  if((s.lastDigit===0&&d===1)||(s.lastDigit===1&&d===0)){
+    const best=bestAutoMarket('s1');
+    if(best&&best.x.code===code){
+      placeAutoTrade('s1',x);
+      delete autoState.s1[code];
+      return;
+    }
   }
+  s.lastDigit=d;
 }
 function strategy2Tick(x,d){
   if(!strategyAllowed('s2'))return;
   const code=x.code,st=strategyStats(x);
-  const s=autoState.s2[code]||(autoState.s2[code]={stage:0,count:0});
-  if(!st||!st.under8Ok){s.stage=0;s.count=0;return}
-  if(s.stage===0){
-    if(d===8||d===9){s.stage=1;s.count=0;}
-  }else{
-    if(d>=0&&d<=7){s.count++;if(s.count>=3){const best=bestAutoMarket('s2');if(best&&best.x.code===code){placeAutoTrade('s2',x);delete autoState.s2[code];return}s.stage=0;s.count=0;}}
-    else if(d===8||d===9){s.count=0;}
-    else{s.stage=0;s.count=0;}
+  const s=autoState.s2[code]||(autoState.s2[code]={lastDigit:null});
+  if(!st||!st.under8Ok){s.lastDigit=d;return}
+  if((s.lastDigit===8&&d===9)||(s.lastDigit===9&&d===8)){
+    const best=bestAutoMarket('s2');
+    if(best&&best.x.code===code){
+      placeAutoTrade('s2',x);
+      delete autoState.s2[code];
+      return;
+    }
   }
+  s.lastDigit=d;
 }
 function weakDigitsSpikingRapidly(x){
   if(!x||x.digits.length<nTicks())return true;
@@ -1450,7 +1454,7 @@ window.addEventListener('beforeunload',()=>{if(accountBalancePoll)clearInterval(
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js?v=2', { scope: './' })
+    navigator.serviceWorker.register('./sw.js?v=3', { scope: './' })
       .catch(function (err) {
         console.warn('PWA service worker registration failed:', err);
       });
