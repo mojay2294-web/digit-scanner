@@ -445,8 +445,8 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 
 
 <div class="card scanner-section">
-<h2>1. Over 1 / Under 8 / Over 2 Trigger Scanner</h2>
-<div class="section-note">OVER 1: digits 0 and 1 below 10%, at least 5 digits from 2–9 above 10%, and the highest digit percentage above 11%. UNDER 8: digits 8 and 9 below 10%, at least 5 digits from 0–7 above 10%, and the highest digit percentage above 11%. Auto entry waits for the cursor to exit the excluded pair, then touch 3 consecutive digits in the allowed range.</div><div class="tablewrap"><table>
+<h2>1. Over 1 / Under 8 / Over 2 / Under 7 / Differs Trigger Scanner</h2>
+<div class="section-note">OVER 1: 0/1 → 5–9 → 0/1. UNDER 8: 8/9 → 0–4 → 8/9. OVER 2: unchanged. UNDER 7: reverse of Over 2. DIFFERS: least-appearing digit → other digit → same least digit.</div><div class="tablewrap"><table>
 <thead><tr><th>Market (Symbol)</th><th>Symbol</th><th>Exact Price</th><th>0%</th><th>1%</th><th>2%</th><th>3%</th><th>4%</th><th>5%</th><th>6%</th><th>7%</th><th>8%</th><th>9%</th><th>Odd%</th><th>Even%</th><th>Status</th></tr></thead>
 <tbody id="body012"><tr><td colspan="9">Connect first.</td></tr></tbody>
 </table></div>
@@ -475,10 +475,9 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   <div class="small" id="strategy1State">Strategy 1 · OVER 1 · WAITING</div>
   <div class="small" id="strategy2State">Strategy 2 · UNDER 8 · WAITING</div>
   <div class="small" id="strategy3State">Strategy 3 · OVER 2 · WAITING</div>
-  <div class="small" id="strategy5State">Strategy 4 · UNDER 7 · WAITING</div>
-  <div class="small" id="strategy4State">Strategy 5 · DIFFERS · WAITING</div>
+  <div class="small" id="strategy5State">Strategy 4 · UNDER 7 · WAITING</div><div class="small" id="strategy4State">Strategy 5 · DIFFERS · WAITING</div>
 </div>
-<div class="small" style="margin-top:8px">S1 OVER 1: 0/1 → 5–9 → 0/1 · 1 tick &nbsp; | &nbsp; S2 UNDER 8: 8/9 → 0–4 → 8/9 · 1 tick &nbsp; | &nbsp; S3 OVER 2: unchanged · 1 tick &nbsp; | &nbsp; S4 UNDER 7: reverse of Over 2 · 1 tick &nbsp; | &nbsp; S5 DIFFERS: least → other → least · 1 tick</div><div class="small" style="margin-top:5px">Entry sequences reset after a trade or broken sequence. Differs selects the uniquely least-appearing digit before waiting for its return after one different digit.</div>
+<div class="small" style="margin-top:8px">S1 OVER 1: 0/1 → 5–9 → 0/1 · 1 tick | S2 UNDER 8: 8/9 → 0–4 → 8/9 · 1 tick | S3 OVER 2: unchanged · 1 tick | S4 UNDER 7: reverse of Over 2 · 1 tick | S5 DIFFERS: least → other → least · 1 tick</div><div class="small" style="margin-top:5px">Entry sequences reset after a trade or broken sequence.</div>
 </div>
 
 
@@ -536,7 +535,7 @@ let ws=null,req=0,ping=null,markets={},tradeWS=null,tradeReq=0,tradePing=null,tr
 let trading={inFlight:false};let selectedAccountId='';let activeTradeMeta=null;
 let autoTradingEnabled=false;
 let autoState={s1:{},s2:{},s3:{},s4:{},s5:{}};
-let differsLastMarket="";
+
 let accountBalance=null,accountCurrency='USD',sessionStartBalance=null;
 let tradeStats={trades:0,won:0,lost:0};
 let tradeActivity=[];
@@ -1119,13 +1118,14 @@ function strategyStats(x){
   const over2Ok=p[0]<9.5&&p[1]<10.5&&p[2]<10.5&&highDigit>=6&&highDigit<=9&&over2TrendSafe;
   const over1Ok=p[0]<10&&p[1]<10&&over1High>=5&&highest>11;
   const under8Ok=p[8]<10&&p[9]<10&&under8High>=5&&highest>11;
-  const under7Ok=over2Ok;
   const differsOrder=Array.from({length:10},(_,d)=>d).sort((a,b)=>c[a]-c[b]||a-b);
   const differsDigit=differsOrder[0];
   const differsLeastUnique=c.filter(v=>v===c[differsDigit]).length===1;
   const differsTrend=differsDigitTrend(x,differsDigit);
   const differsOk=differsLeastUnique;
-  return {p,highest,highDigit,over1High,under8High,over1Ok,under8Ok,over2Ok,over2TrendSafe,under7Ok,differsDigit,differsTrend,differsOk};
+  // Under 7 is the reverse counterpart of Over 2, using the 7/8/9 group.
+  const under7Ok=(p[7]<9.5&&p[8]<9.5&&p[9]<10.5)||(p[7]<9.5&&p[9]<9.5&&p[8]<10.5)||(p[8]<9.5&&p[9]<9.5&&p[7]<10.5);
+  return {p,highest,highDigit,over1High,under8High,over2Ok,over2TrendSafe,under7Ok,over1Ok,under8Ok,differsDigit,differsTrend,differsOk};
 }
 function bestAutoMarket(strategyId){
   const out=[];
@@ -1157,7 +1157,7 @@ function updateStrategyStates(){
   const a=m1?(autoState.s1[m1.x.code]||{stage:0}):null;
   const b=m2?(autoState.s2[m2.x.code]||{stage:0}):null;
   const c=m3?(autoState.s3[m3.x.code]||{lastDigit:null}):null;
-  const u=m5?(autoState.s5[m5.x.code]||{stage:0}):null;
+  const u=m5?(autoState.s5[m5.x.code]||{stage:0,first:null}):null;
   const d=m4?(autoState.s4[m4.x.code]||{stage:0,target:null}):null;
   setStrategyState('s1',!m1?'WAITING · no qualifying market':a.stage===1?'TOUCHED 0/1 · WAITING FOR 5–9 · '+m1.x.code:a.stage===2?'0/1 → 5–9 · WAITING FOR 0/1 · '+m1.x.code:'QUALIFIED · WAITING FOR 0/1 · '+m1.x.code);
   setStrategyState('s2',!m2?'WAITING · no qualifying market':b.stage===1?'TOUCHED 8/9 · WAITING FOR 0–4 · '+m2.x.code:b.stage===2?'8/9 → 0–4 · WAITING FOR 8/9 · '+m2.x.code:'QUALIFIED · WAITING FOR 8/9 · '+m2.x.code);
@@ -1168,10 +1168,6 @@ function updateStrategyStates(){
 function autoTradingReady(){return !!(autoTradingEnabled&&tradeWS&&tradeWS.readyState===WebSocket.OPEN&&selectedAccountId)}
 async function placeAutoTrade(strategy,market,differsBarrier=null){
   if(!autoTradingReady()||trading.inFlight)return false;
-  if(strategy==='s4' && differsLastMarket && market.code===differsLastMarket){
-    log('DIFFERS ROTATION · ' + market.code + ' blocked after previous Differs trade.','warning');
-    return false;
-  }
   const stake=Number($('autoStake')?.value||0.35);
   if(!Number.isFinite(stake)||stake<0.35){log('Auto-Trader: stake must be at least 0.35.','error');return false}
   const contract=strategy==='s4'?'DIGITDIFF':(strategy==='s1'||strategy==='s3')?'DIGITOVER':'DIGITUNDER';
@@ -1191,14 +1187,14 @@ function strategy1Tick(x,d){
   const code=x.code,st=strategyStats(x);
   const q=autoState.s1[code]||(autoState.s1[code]={stage:0});
   if(!st||!st.over1Ok){q.stage=0;return}
-  // Exact sequence: 0/1 -> 5-9 -> 0/1
+  // Exact sequence: 0/1 -> 5-9 -> 0/1.
   if(q.stage===0){
     if(d===0||d===1)q.stage=1;
   }else if(q.stage===1){
     if(d>=5&&d<=9)q.stage=2;
     else if(d===0||d===1)q.stage=1;
     else q.stage=0;
-  }else if(q.stage===2){
+  }else{
     if(d===0||d===1){
       const best=bestAutoMarket('s1');
       if(best&&best.x.code===code){placeAutoTrade('s1',x);delete autoState.s1[code];return}
@@ -1211,14 +1207,14 @@ function strategy2Tick(x,d){
   const code=x.code,st=strategyStats(x);
   const q=autoState.s2[code]||(autoState.s2[code]={stage:0});
   if(!st||!st.under8Ok){q.stage=0;return}
-  // Exact reverse sequence: 8/9 -> 0-4 -> 8/9
+  // Exact reverse sequence: 8/9 -> 0-4 -> 8/9.
   if(q.stage===0){
     if(d===8||d===9)q.stage=1;
   }else if(q.stage===1){
     if(d>=0&&d<=4)q.stage=2;
     else if(d===8||d===9)q.stage=1;
     else q.stage=0;
-  }else if(q.stage===2){
+  }else{
     if(d===8||d===9){
       const best=bestAutoMarket('s2');
       if(best&&best.x.code===code){placeAutoTrade('s2',x);delete autoState.s2[code];return}
@@ -1244,30 +1240,6 @@ function differsDigitTrend(x,d){
   const prevPct=prev.filter(v=>v===d).length/rn*100;
   return curPct<prevPct;
 }
-function strategy4Tick(x,d){
-  if(!strategyAllowed('s4'))return;
-  const code=x.code,st=strategyStats(x);
-  const q=autoState.s4[code]||(autoState.s4[code]={stage:0,target:null});
-  if(!st||!st.differsOk){q.stage=0;q.target=null;return}
-  const target=st.differsDigit;
-  if(q.target!==null&&q.target!==target)q.stage=0;
-  q.target=target;
-  // Exact sequence: least -> other digit -> same least digit.
-  if(q.stage===0){
-    if(d===target)q.stage=1;
-  }else if(q.stage===1){
-    if(d!==target)q.stage=2;
-  }else if(q.stage===2){
-    if(d===target){
-      const best=bestAutoMarket('s4');
-      if(best&&best.x.code===code&&best.st.differsDigit===target){
-        placeAutoTrade('s4',x,target);
-        delete autoState.s4[code];
-        return;
-      }
-    }
-  }
-}
 function strategy3Tick(x,d){
   if(!strategyAllowed('s3'))return;
   const code=x.code,st=strategyStats(x);
@@ -1284,22 +1256,40 @@ function strategy5Tick(x,d){
   const code=x.code,st=strategyStats(x);
   const q=autoState.s5[code]||(autoState.s5[code]={stage:0,first:null});
   if(!st||!st.under7Ok){q.stage=0;q.first=null;return}
-  // Vice-versa of Over 2: two different consecutive digits from 7/8/9.
+  // Reverse counterpart of Over 2: two different consecutive digits from 7/8/9.
   if(q.stage===0){
-    if(d===7||d===8||d===9){q.stage=1;q.first=d;}
-  }else if(q.stage===1){
+    if(d===7||d===8||d===9){q.stage=1;q.first=d}
+  }else{
     if((d===7||d===8||d===9)&&d!==q.first){
       const best=bestAutoMarket('s5');
-      if(best&&best.x.code===code){
-        placeAutoTrade('s5',x);
-        delete autoState.s5[code];
-        return;
-      }
+      if(best&&best.x.code===code){placeAutoTrade('s5',x);delete autoState.s5[code];return}
       q.stage=0;q.first=null;
     }else if(d===7||d===8||d===9){
       q.first=d;
     }else{
       q.stage=0;q.first=null;
+    }
+  }
+}
+function strategy4Tick(x,d){
+  if(!strategyAllowed('s4'))return;
+  const code=x.code,st=strategyStats(x);
+  const q=autoState.s4[code]||(autoState.s4[code]={stage:0,target:null});
+  if(!st||!st.differsOk){q.stage=0;q.target=null;return}
+  const target=st.differsDigit;
+  if(q.target!==target){q.stage=0;q.target=target}
+  if(q.stage===0){
+    if(d===target)q.stage=1;
+  }else if(q.stage===1){
+    if(d!==target)q.stage=2;
+  }else if(q.stage===2){
+    if(d===target){
+      const best=bestAutoMarket('s4');
+      if(best&&best.x.code===code&&best.st.differsDigit===target){
+        placeAutoTrade('s4',x,target);delete autoState.s4[code];return
+      }
+    }else{
+      q.stage=0;
     }
   }
 }
@@ -1380,7 +1370,7 @@ async function connectSelectedAccount(accountType){
   let acct=accountsListData.find(a=>String(a.account_type||'').toLowerCase()===String(accountType||'').toLowerCase());
   if(!acct){setVerificationStatus((accountType||'').toUpperCase()+' account not available on this PAT.','bad');return;}
   const id=acct.account_id||acct.loginid;if(!id)return;
-  selectedAccountId=id; accountCurrency=acct.currency||'USD'; autoTradingEnabled=false; trading.inFlight=false; activeTradeMeta=null; autoState={s1:{},s2:{},s3:{},s4:{}}; differsLastMarket=""; tradeStats={trades:0,won:0,lost:0};
+  selectedAccountId=id; accountCurrency=acct.currency||'USD'; autoTradingEnabled=false; trading.inFlight=false; activeTradeMeta=null; autoState={s1:{},s2:{},s3:{},s4:{},s5:{}};  tradeStats={trades:0,won:0,lost:0};
   if(acct.balance!==undefined&&acct.balance!==null){accountBalance=Number(acct.balance);sessionStartBalance=accountBalance;}
   try{localStorage.setItem(savedAccountTypeKey,accountType)}catch(e){}
   $('selectedAccountStatus').textContent=String(accountType).toUpperCase()+' selected · connecting live…';
@@ -1484,7 +1474,7 @@ function handleTrade(m){
  if(m.msg_type==='buy'&&m.buy&&activeTradeMeta&&m.req_id===activeTradeMeta.buyReq){
   activeTradeMeta.contractId=m.buy.contract_id||m.buy.contract_id;
   $('autoStatus').textContent='LIVE TRADE · '+activeTradeMeta.strategy.toUpperCase()+' · '+activeTradeMeta.symbol+' · '+activeTradeMeta.contract+' '+activeTradeMeta.barrier;
-  if(activeTradeMeta.strategy==='s4')differsLastMarket=activeTradeMeta.symbol;
+  
   log('AUTO TRADE OPENED · '+activeTradeMeta.strategy.toUpperCase()+' · '+activeTradeMeta.symbol+' · '+activeTradeMeta.contract+' '+activeTradeMeta.barrier+' · 1 tick · stake '+activeTradeMeta.stake.toFixed(2),'success');
   if(activeTradeMeta.contractId)tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:activeTradeMeta.contractId,subscribe:1,req_id:++tradeReq}));
   return;
@@ -1526,7 +1516,7 @@ function startAutoTrading(){
 }
 function stopAutoTrading(){
   autoTradingEnabled=false;
-  autoState={s1:{},s2:{},s3:{},s4:{}}; differsLastMarket="";
+  autoState={s1:{},s2:{},s3:{},s4:{},s5:{}}; 
   updateStrategyStates();
   $('autoStatus').textContent='Stopped · waiting for start';
   updateAutoButtons();
@@ -1535,7 +1525,7 @@ function stopAutoTrading(){
 $('autoStart').onclick=startAutoTrading;
 $('autoStop').onclick=stopAutoTrading;
 updateAutoButtons();
-$('autoStrategy').onchange=()=>{autoState={s1:{},s2:{},s3:{},s4:{}};updateStrategyStates();};
+$('autoStrategy').onchange=()=>{autoState={s1:{},s2:{},s3:{},s4:{},s5:{}};updateStrategyStates();};
 $('autoStake').onchange=()=>{if(Number($('autoStake').value)<0.35)$('autoStake').value='0.35';};
 updateStrategyStates();
 window.addEventListener('beforeunload',()=>{if(accountBalancePoll)clearInterval(accountBalancePoll);clearPublicPing();if(tradePing)clearInterval(tradePing);if(tradeReconnectTimer)clearTimeout(tradeReconnectTimer);try{if(ws)ws.close()}catch(e){}try{if(tradeWS)tradeWS.close()}catch(e){}});
