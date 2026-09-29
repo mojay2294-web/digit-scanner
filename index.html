@@ -426,6 +426,11 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 .oe-controls label{font-size:9px;font-weight:800;color:var(--faint);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
 .oe-controls input,.oe-controls select{width:100%;box-sizing:border-box;min-height:36px;padding:7px 9px;font-size:11px}
 .oe-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+.streak-freq-card{margin-top:10px}
+.streak-freq-row{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.streak-freq-row:last-child{border-bottom:none}
+.streak-freq-row span:first-child{opacity:0.75}
+.streak-freq-row span:last-child{font-weight:600}
 .oe-stat{padding:9px 10px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(180deg,var(--surface-2),var(--well))}
 .oe-stat .small{font-size:8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
 .oe-stat strong{display:block;margin-top:3px;font-family:var(--mono);font-size:14px;letter-spacing:-.01em}
@@ -480,8 +485,8 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 
 
 <div class="card scanner-section">
-<h2>1. Over 1 / Under 8 / Over 2 / Under 7 / Differs Trigger Scanner</h2>
-<div class="section-note">OVER 1: 0/1 → 5–9 → 0/1. UNDER 8: 8/9 → 0–4 → 8/9. OVER 2: unchanged. UNDER 7: reverse of Over 2. DIFFERS: least-appearing digit → other digit → same least digit.</div><div class="tablewrap"><table>
+<h2>1. Market Digit Scanner</h2>
+<div class="tablewrap"><table>
 <thead><tr><th>Market (Symbol)</th><th>Symbol</th><th>Exact Price</th><th>0%</th><th>1%</th><th>2%</th><th>3%</th><th>4%</th><th>5%</th><th>6%</th><th>7%</th><th>8%</th><th>9%</th><th>Odd%</th><th>Even%</th><th>Status</th></tr></thead>
 <tbody id="body012"><tr><td colspan="9">Connect first.</td></tr></tbody>
 </table></div>
@@ -522,7 +527,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 <div class="oe-controls">
   <div><label>MARKET</label><select id="oeMarket"><option value="">Connect first</option></select></div>
   <div><label>SAMPLE TICKS</label><input id="oeSample" type="number" min="20" max="1000" step="10" value="100"></div>
-  <div><label>CONSECUTIVE OPPOSITE</label><input id="oeConsecutive" type="number" min="1" max="10" step="1" value="3"></div>
+  <div><label>CONSECUTIVE OPPOSITE</label><input id="oeConsecutive" type="number" min="1" max="20" step="1" value="3"></div>
   <div><label>BASE STAKE</label><input id="oeStake" type="number" min="0.35" step="0.01" value="0.35"></div>
   <div><label>MARTINGALE</label><input id="oeMartingale" type="number" min="1" max="10" step="0.1" value="2"></div>
   <div><label>STOP LOSS (USD)</label><input id="oeStopLoss" type="number" min="0.01" step="0.01" value="5.00"></div>
@@ -536,9 +541,16 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   <div class="oe-stat"><div class="small">ODD %</div><strong id="oeOddPct">—</strong></div>
   <div class="oe-stat"><div class="small">QUALIFIED TARGET</div><strong id="oeTarget">WAIT</strong></div>
   <div class="oe-stat"><div class="small">NEXT STAKE</div><strong id="oeNextStake">—</strong></div>
+  <div class="oe-stat"><div class="small">HIGHEST EVEN STREAK</div><strong id="oeMaxEvenStreak">0</strong></div>
+  <div class="oe-stat"><div class="small">HIGHEST ODD STREAK</div><strong id="oeMaxOddStreak">0</strong></div>
 </div>
 <div class="oe-actions"><button id="oeStart" class="oe-start" type="button">START</button><button id="oeStop" class="oe-stop" type="button" disabled>STOP</button></div>
 <div id="oeStatus" class="oe-status">Stopped · connect DEMO or REAL first.</div>
+</div>
+
+<div class="card streak-freq-card">
+<h2>Streak Frequency (This Session)</h2>
+<div id="oeStreakFreqList" class="small">No streaks recorded yet.</div>
 </div>
 
 <div class="card trading-stats-compact">
@@ -857,14 +869,16 @@ function scheduleLiveUI(symbol){
 }
 function handleTick(t){
   const x=markets[t.symbol];if(!x)return;
-  const old89=candidate89(x),old01=candidate01(x);
   const d=digit(x,t.quote);if(d===null)return;
   x.price=t.quote;x.digits.push(d);x.prices.push(t.quote);
   while(x.digits.length>nTicks()){x.digits.shift();x.prices.shift()}
 
+  // ODD/EVEN RUNS FIRST. Recovery trades must go out the instant the tick
+  // arrives, before any other strategy or UI work touches the main thread.
+  oeTriggerTick(x,d,Number(t.epoch)||0);
+
   // Auto-Trader uses OVER 1, UNDER 8, and OVER 2.
   handleAutoTick(x,d);
-  oeTriggerTick(x,d);
   scheduleLiveUI(t.symbol);
 }
 function counts(x){const c=Array(10).fill(0);x.digits.forEach(d=>c[d]++);return c}
@@ -1511,6 +1525,7 @@ $('token').addEventListener('change',()=>{savePat();loadTradingAccounts(false)})
 window.addEventListener('load',()=>{if(loadSavedPat()){setVerificationStatus('Saved PAT found. Verifying automatically…');loadTradingAccounts(true)}});
 
 function handleTrade(m){
+ if(m.req_id&&oeReqMap.has(m.req_id)&&oeHandleTradeMsg(m))return;
  if(m.error){
   const msg='ACCOUNT ERROR: '+m.error.code+' | '+m.error.message; log(msg,'error');
   if(activeTradeMeta){const failedStrategy=activeTradeMeta.strategy;trading.inFlight=false;activeTradeMeta=null;$('autoStatus').textContent='TRADE FAILED · '+(m.error.message||m.error.code||'API error');log('TRADE FAILED · '+failedStrategy.toUpperCase()+' · '+(m.error.code||'Unknown')+' | '+(m.error.message||'API rejected the proposal'),'error');}
@@ -1559,9 +1574,13 @@ function handleTrade(m){
     const profit=Number(c.profit||0); const payout=Number(c.payout||0); const label=profit>=0?'WIN':'LOSS';
     tradeStats.trades++; if(profit>=0){tradeStats.won++;}else tradeStats.lost++; tradeActivity.unshift({time:Date.now(),strategy:meta.strategy,symbol:meta.symbol,stake:meta.stake,contract:meta.contract,barrier:meta.barrier,profit}); if(tradeActivity.length>100)tradeActivity.pop(); updateTradeStats();
     log((meta.strategy==='odd_even'?'ODD/EVEN TRADE ':'AUTO TRADE ')+label+' · '+meta.strategy.toUpperCase()+' · '+meta.symbol+' · P/L '+profit.toFixed(2),profit>=0?'success':'error');
-    if(activeTradeMeta&&activeTradeMeta.contractId&&String(activeTradeMeta.contractId)===cid){
-      if(meta.strategy==='odd_even') oeTradeSettled(profit);
-      else $('autoStatus').textContent='READY · last '+label+' · waiting for new trigger';
+    if(meta.strategy==='odd_even'){
+      // Odd/Even contracts overlap during recovery, so they are matched by
+      // contract ID (never by activeTradeMeta) and reconciled in oeTradeSettled.
+      meta.serverSettled=true;meta.serverProfit=profit;
+      oeTradeSettled(profit,meta,c);
+    }else if(activeTradeMeta&&activeTradeMeta.contractId&&String(activeTradeMeta.contractId)===cid){
+      $('autoStatus').textContent='READY · last '+label+' · waiting for new trigger';
       trading.inFlight=false;activeTradeMeta=null;
     }
   }
@@ -1607,7 +1626,10 @@ $('autoStake').onchange=()=>{if(Number($('autoStake').value)<0.35)$('autoStake')
 updateStrategyStates();
 
 // ===== JAYMO Odd / Even Reversion Strategy =====
-let oddEvenEnabled=false, oddEvenInFlight=false, oeCurrentStake=0.35, oeConsecutiveCount=0, oeLastTarget='';
+let oddEvenEnabled=false, oddEvenInFlight=false, oeCurrentStake=0.35;
+let oeMaxEvenStreak=0, oeMaxOddStreak=0; // highest same-parity run seen this session, across all markets
+const oeStreakFreq=new Map(); // completed streak length -> how many times it has occurred this session (either direction)
+const oeStreaks=new Map(); // market code -> {even,odd} consecutive same-parity tick counts, tracked independently per market
 // AUTO mode scans every available 1-second market. Once an entry is found,
 // the strategy locks to that market + EVEN/ODD direction until the trade wins.
 let oeLockedMarket='', oeLockedTarget='', oeRetryPending=false;
@@ -1630,136 +1652,274 @@ function oeCurrentPnL(){return tradeActivity.reduce((sum,a)=>{const p=Number(a.p
 function oeRunPnL(){return oeCurrentPnL()-oeRunStartPnL}
 function oeStopLossAmount(){return Math.max(0.01,oeNum('oeStopLoss',5))}
 function oeMaxStakeAmount(){return Math.max(oeNum('oeStake',0.35),oeNum('oeMaxStake',2.80))}
+// Percentage distribution is INFORMATIONAL ONLY now — it is shown for context
+// but no longer gates which markets are scanned. Entries fire purely on a raw
+// N-in-a-row same-parity streak (see oeTriggerTick), on ANY qualifying market,
+// even one with a weak or losing-looking percentage split.
 function oeAnalysis(x){
   const sample=Math.max(20,Math.min(1000,Math.floor(oeNum('oeSample',100))));
   if(!x||x.digits.length<sample)return null;
   const ds=x.digits.slice(-sample), c=Array(10).fill(0); ds.forEach(d=>c[d]++);
-  const evenDigits=[0,2,4,6,8], oddDigits=[1,3,5,7,9];
+  const evenDigits=[0,2,4,6,8];
   const even=evenDigits.reduce((a,d)=>a+c[d],0)/sample*100, odd=100-even;
-  const evenQualified=evenDigits.filter(d=>c[d]/sample*100>10.5).length;
-  const oddQualified=oddDigits.filter(d=>c[d]/sample*100>10.5).length;
-  const evenStrong=Math.max(...evenDigits.map(d=>c[d]/sample*100)), oddStrong=Math.max(...oddDigits.map(d=>c[d]/sample*100));
-  const evenTrigger=oeNum('oeEvenTrigger',12.5), oddTrigger=oeNum('oeOddTrigger',12.5);
-  const evenOK=even>odd && evenQualified>=3 && evenStrong>=evenTrigger;
-  const oddOK=odd>even && oddQualified>=3 && oddStrong>=oddTrigger;
-  let target=evenOK?'EVEN':oddOK?'ODD':'';
-  const mode=$('oeMode')?.value||'both';
-  if((mode==='even'&&target!=='EVEN')||(mode==='odd'&&target!=='ODD'))target='';
-  return {even,odd,target,evenStrong,oddStrong};
+  return {even,odd};
+}
+function oeStreakOf(code){return oeStreaks.get(code)||{even:0,odd:0}}
+function oeRecordStreak(len){
+  if(!len||len<1)return;
+  oeStreakFreq.set(len,(oeStreakFreq.get(len)||0)+1);
+  renderOeStreakFreq();
+}
+function renderOeStreakFreq(){
+  const el=$('oeStreakFreqList'); if(!el)return;
+  if(oeStreakFreq.size===0){el.textContent='No streaks recorded yet.';return}
+  const rows=[...oeStreakFreq.entries()].sort((a,b)=>b[0]-a[0])
+    .map(([len,count])=>'<div class="streak-freq-row"><span>'+len+'</span><span>'+count+(count===1?' time':' times')+'</span></div>');
+  el.innerHTML=rows.join('');
 }
 function updateOddEvenUI(x){
-  const a=oeAnalysis(x);
-  if(!a){$('oeEvenPct').textContent='—';$('oeOddPct').textContent='—';$('oeTarget').textContent=oeLockedTarget?oeLockedTarget:'WAIT';$('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);return}
-  $('oeEvenPct').textContent=a.even.toFixed(1)+'%'; $('oeOddPct').textContent=a.odd.toFixed(1)+'%';
-  $('oeTarget').textContent=oeLockedTarget?(oeLockedTarget+' · LOCKED'):(a.target||'WAIT');
+  const a=x?oeAnalysis(x):null;
+  $('oeEvenPct').textContent=a?a.even.toFixed(1)+'%':'—';
+  $('oeOddPct').textContent=a?a.odd.toFixed(1)+'%':'—';
+  $('oeTarget').textContent=oeLockedTarget?(oeLockedTarget+' · LOCKED'):'WAIT';
   $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);
 }
-function oeReset(reason){
-  oeConsecutiveCount=0;oeLastTarget='';oeLockedMarket='';oeLockedTarget='';oeRetryPending=false;
+// =====================================================================
+// TICK-PERFECT RECOVERY ENGINE
+// A 1-tick DIGITEVEN/DIGITODD contract bought right after tick N is decided
+// by the digit of tick N+1. So the result of every contract is already known
+// locally the moment the next tick arrives. On a loss the next contract is
+// sent from inside that same tick event (no waiting for the server to settle,
+// no timers), so every consecutive tick is covered until a win.
+// Server settlement is still used for P/L, stop loss and as a cross-check.
+// =====================================================================
+let oeChain=null;              // active recovery chain (null = scanning)
+const oeReqMap=new Map();      // req_id -> {meta,kind:'proposal'|'buy'}
+let oeDirectBuy=true, oeDirectConfirmed=false;
+
+function oeNextStakeFrom(stake){const mult=Math.max(1,oeNum('oeMartingale',2));return Number((stake*mult).toFixed(2))}
+function oeProjectedPnL(){
+  // Settled P/L plus contracts already decided locally but not yet settled by the server.
+  let p=oeRunPnL();
+  if(oeChain)oeChain.contracts.forEach(c=>{if(c.resolved&&!c.serverSettled&&!c.failed)p+=c.resolvedWin?0:-c.stake});
+  return p;
+}
+function oeSetLockedUI(txt){
+  $('oeNextStake').textContent=accountCurrency+' '+(oeChain?oeChain.stake:oeCurrentStake).toFixed(2);
+  $('oeTarget').textContent=oeChain?(oeChain.target+' · LOCKED'):'WAIT';
+  if(txt)$('oeStatus').textContent=txt;
+}
+function oeReset(reason,force){
+  if(force||!oeChain){oeChain=null;oeLockedMarket='';oeLockedTarget='';oeRetryPending=false;oddEvenInFlight=false;if(force){trading.inFlight=false;oeStreaks.clear()}}
   const x=markets[$('oeMarket')?.value]; updateOddEvenUI(x);
-  if(reason&&$('oeStatus'))$('oeStatus').textContent=reason;
+  if(reason&&$('oeStatus')&&!oeChain)$('oeStatus').textContent=reason;
 }
 function startOddEven(){
   if(!selectedAccountId||!tradeWS||tradeWS.readyState!==WebSocket.OPEN){$('oeStatus').textContent='Connect DEMO or REAL first.';return}
   const stake=oeNum('oeStake',0.35); if(stake<0.35){$('oeStake').value='0.35';$('oeStatus').textContent='Base stake must be at least 0.35.';return}
   const stopLoss=oeNum('oeStopLoss',5); if(stopLoss<=0){$('oeStopLoss').value='5.00';$('oeStatus').textContent='Stop loss must be greater than 0.';return}
   const maxStake=oeMaxStakeAmount(); if(maxStake<stake){$('oeMaxStake').value=stake.toFixed(2);$('oeStatus').textContent='Max stake cannot be below the base stake.';return}
-  oeCurrentStake=stake;oeRunStartPnL=oeCurrentPnL();oeStopLossTriggered=false;oeSettledContracts.clear();contractMetaById.clear();oddEvenEnabled=true;oeReset('AUTO SCANNING · all 1-second markets · stop loss '+accountCurrency+' '+stopLoss.toFixed(2));
+  oeCurrentStake=stake;oeRunStartPnL=oeCurrentPnL();oeStopLossTriggered=false;oeSettledContracts.clear();contractMetaById.clear();oeReqMap.clear();oddEvenEnabled=true;
+  oeMaxEvenStreak=0;oeMaxOddStreak=0;$('oeMaxEvenStreak').textContent='0';$('oeMaxOddStreak').textContent='0';
+  oeStreakFreq.clear();renderOeStreakFreq();
+  oeReset('AUTO SCANNING · all 1-second markets · stop loss '+accountCurrency+' '+stopLoss.toFixed(2),true);
   $('oeStart').disabled=true;$('oeStop').disabled=false;
   log('Odd/Even auto-scan started.','success');
 }
 function stopOddEven(reason){
-  oddEvenEnabled=false;oeConsecutiveCount=0;oeLastTarget='';oeLockedMarket='';oeLockedTarget='';oeRetryPending=false;
+  oddEvenEnabled=false;oeLockedMarket='';oeLockedTarget='';oeRetryPending=false;oddEvenInFlight=false;oeChain=null;oeReqMap.clear();trading.inFlight=false;
   $('oeStart').disabled=false;$('oeStop').disabled=true;$('oeStatus').textContent=(reason&&typeof reason==='string')?reason:'Stopped · waiting for start';
 }
-function placeOddEvenTrade(target,x){
-  if(!oddEvenEnabled||trading.inFlight||!tradeWS||tradeWS.readyState!==WebSocket.OPEN||!selectedAccountId)return false;
-  const stake=oeCurrentStake, contract=target==='EVEN'?'DIGITEVEN':'DIGITODD', reqId=++tradeReq;
-  // Lock the market and direction BEFORE sending the entry. Losses will reuse these values.
-  oeLockedMarket=x.code; oeLockedTarget=target; oddEvenInFlight=true;
-  trading.inFlight=true;activeTradeMeta={strategy:'odd_even',symbol:x.code,stake,contract,barrier:'',proposalReq:reqId};
-  $('oeStatus').textContent='ENTRY · '+target+' · '+x.code+' · stake '+accountCurrency+' '+stake.toFixed(2);
-  try{tradeWS.send(JSON.stringify({proposal:1,amount:stake,basis:'stake',contract_type:contract,currency:accountCurrency,duration:1,duration_unit:'t',underlying_symbol:x.code,req_id:reqId}));return true}
-  catch(e){trading.inFlight=false;oddEvenInFlight=false;activeTradeMeta=null;$('oeStatus').textContent='Trade send failed.';return false}
+function oeReleaseChain(msg,type){
+  const base=oeNum('oeStake',0.35);
+  oeChain=null;oeLockedMarket='';oeLockedTarget='';oeRetryPending=false;oddEvenInFlight=false;trading.inFlight=false;
+  oeCurrentStake=base;
+  $('oeNextStake').textContent=accountCurrency+' '+base.toFixed(2);$('oeTarget').textContent='WAIT';
+  if(msg){$('oeStatus').textContent=msg;log('ODD/EVEN · '+msg,type||'log')}
 }
-function oeTradeSettled(profit){
-  const base=oeNum('oeStake',0.35), mult=Math.max(1,oeNum('oeMartingale',2));
-  const runPnL=oeRunPnL(), stopLoss=oeStopLossAmount();
+// ---- sending ----
+function oeSendBuy(meta,direct){
+  const rid=++tradeReq; meta.direct=direct;
+  if(direct){
+    // ONE round trip: buy straight from parameters, no proposal step.
+    oeReqMap.set(rid,{meta,kind:'buy'});
+    tradeWS.send(JSON.stringify({buy:1,price:meta.stake,parameters:{amount:meta.stake,basis:'stake',contract_type:meta.contract,currency:accountCurrency,duration:1,duration_unit:'t',underlying_symbol:meta.symbol},req_id:rid}));
+  }else{
+    oeReqMap.set(rid,{meta,kind:'proposal'});
+    tradeWS.send(JSON.stringify({proposal:1,amount:meta.stake,basis:'stake',contract_type:meta.contract,currency:accountCurrency,duration:1,duration_unit:'t',underlying_symbol:meta.symbol,req_id:rid}));
+  }
+}
+function oeFireBuy(chain,sentAfterEpoch){
+  if(!tradeWS||tradeWS.readyState!==WebSocket.OPEN)return false;
+  const meta={strategy:'odd_even',symbol:chain.market,stake:chain.stake,target:chain.target,contract:chain.target==='EVEN'?'DIGITEVEN':'DIGITODD',barrier:'',
+    sentAfterEpoch:sentAfterEpoch||chain.lastEpoch||0,bought:false,resolved:false,resolvedWin:null,serverSettled:false,failed:false,contractId:''};
+  chain.outstanding=meta;chain.contracts.push(meta);trading.inFlight=true;oddEvenInFlight=true;
+  try{oeSendBuy(meta,oeDirectBuy);return true}
+  catch(e){chain.outstanding=null;meta.failed=true;log('ODD/EVEN send failed: '+e.message,'error');return false}
+}
+function placeOddEvenTrade(target,x,epoch){
+  if(!oddEvenEnabled||oeChain||!selectedAccountId)return false;
+  const chain={market:x.code,target,stake:oeCurrentStake,outstanding:null,contracts:[],ignoreUntilEpoch:0,abort:false,failures:0,needEntry:false,lastEpoch:epoch||0};
+  oeChain=chain;oeLockedMarket=x.code;oeLockedTarget=target;
+  if(!oeFireBuy(chain,epoch)){oeReleaseChain('Trade send failed · RESUMING MARKET SCAN','error');return false}
+  oeSetLockedUI('ENTRY · '+target+' · '+x.code+' · stake '+accountCurrency+' '+chain.stake.toFixed(2));
+  return true;
+}
+// ---- server messages for Odd/Even requests ----
+function oeHandleTradeMsg(m){
+  const ent=oeReqMap.get(m.req_id); if(!ent)return false; oeReqMap.delete(m.req_id);
+  const meta=ent.meta;
+  if(m.error){oeBuyFailed(meta,ent,m.error);return true}
+  if(m.msg_type==='proposal'&&m.proposal&&ent.kind==='proposal'){
+    const price=Number(m.proposal.ask_price||meta.stake), rid=++tradeReq;
+    oeReqMap.set(rid,{meta,kind:'buy'});
+    try{tradeWS.send(JSON.stringify({buy:m.proposal.id,price,req_id:rid}))}catch(e){oeBuyFailed(meta,{kind:'buy'},{message:e.message})}
+    return true;
+  }
+  if(m.msg_type==='buy'&&m.buy){
+    if(meta.direct)oeDirectConfirmed=true;
+    meta.bought=true;meta.contractId=String(m.buy.contract_id||'');
+    if(oeChain)oeChain.failures=0;
+    if(meta.contractId){
+      contractMetaById.set(meta.contractId,meta);
+      try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:meta.contractId,subscribe:1,req_id:++tradeReq}))}catch(e){}
+    }
+    log('ODD/EVEN TRADE OPENED · '+meta.symbol+' · '+meta.contract+' · 1 tick · stake '+meta.stake.toFixed(2),'success');
+    return true;
+  }
+  return false;
+}
+function oeBuyFailed(meta,ent,err){
+  const em=(err&&(err.message||err.code))||'API error';
+  log('ODD/EVEN BUY FAILED · '+(err&&err.code||'')+' | '+em,'error');
+  const chain=oeChain;
+  if(!chain||chain.outstanding!==meta)return;
+  // First direct buy ever rejected: the API may not accept buy-by-parameters, so fall back to proposal→buy.
+  if(meta.direct&&!oeDirectConfirmed){
+    oeDirectBuy=false;
+    try{oeSendBuy(meta,false);log('ODD/EVEN · direct buy rejected, falling back to proposal→buy','warning');return}catch(e){}
+  }
+  chain.outstanding=null;meta.failed=true;
+  if(!chain.contracts.some(c=>!c.failed)){oeReleaseChain('ENTRY FAILED · '+em+' · RESUMING MARKET SCAN','error');return}
+  chain.failures++;
+  if(chain.failures>3){oeReleaseChain('RECOVERY ABANDONED · buy kept failing · '+em+' · RESUMING MARKET SCAN','error');return}
+  // Retry the SAME stake immediately, still inside this tick window, so no tick is skipped.
+  if(!oeFireBuy(chain))oeReleaseChain('RECOVERY ABANDONED · connection lost','error');
+}
+// ---- deciding a contract (tick result first, server result as cross-check / fallback) ----
+function oeResolve(meta,isWin,source,epoch){
+  if(meta.resolved){
+    if(source==='server'&&meta.resolvedWin!==isWin)oeMismatch(meta,isWin);
+    return;
+  }
+  meta.resolved=true;meta.resolvedWin=isWin;meta.resolvedBy=source;
+  const chain=oeChain; if(!chain||chain.outstanding!==meta||!oddEvenEnabled)return;
+  chain.outstanding=null;
+  if(source==='server'&&epoch)chain.ignoreUntilEpoch=Math.max(chain.ignoreUntilEpoch,epoch);
+  if(isWin){oeReleaseChain('WIN · base stake restored · RESUMING MARKET SCAN','success');return}
+  // ---- LOSS: go again on the very next tick ----
+  if(chain.abort){oeReleaseChain('Recovery stopped after sync correction · RESUMING MARKET SCAN','warning');return}
+  const stopLoss=oeStopLossAmount(), proj=oeProjectedPnL();
+  if(proj<=-stopLoss){
+    oeStopLossTriggered=true;oeCurrentStake=oeNum('oeStake',0.35);oeRunStartPnL=oeCurrentPnL();
+    stopOddEven('STOP LOSS HIT · '+accountCurrency+' '+Math.abs(proj).toFixed(2)+' loss · trading stopped');
+    $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);$('oeTarget').textContent='STOPPED';
+    log('ODD/EVEN STOP LOSS HIT · loss '+accountCurrency+' '+Math.abs(proj).toFixed(2)+' · limit '+accountCurrency+' '+stopLoss.toFixed(2),'error');
+    return;
+  }
+  const maxStake=oeMaxStakeAmount(), nextStake=oeNextStakeFrom(chain.stake);
+  if(nextStake>maxStake){
+    const base=oeNum('oeStake',0.35);
+    oeReleaseChain('MAX STAKE REACHED · reset to base '+accountCurrency+' '+base.toFixed(2)+' · RESUMING MARKET SCAN','error');
+    log('ODD/EVEN MAX STAKE REACHED · next stake would be '+accountCurrency+' '+nextStake.toFixed(2)+' · limit '+accountCurrency+' '+maxStake.toFixed(2)+' · reset to base','error');
+    return;
+  }
+  chain.stake=nextStake;oeCurrentStake=nextStake;
+  if(!oeFireBuy(chain,source==='tick'?epoch:chain.lastEpoch)){oeReleaseChain('Connection lost · recovery stopped','error');return}
+  oeSetLockedUI('LOSS · LOCKED '+chain.target+' · '+chain.market+' · next tick entry sent at '+accountCurrency+' '+nextStake.toFixed(2));
+}
+function oeMismatch(meta,actualWin){
+  log('ODD/EVEN SYNC MISMATCH · '+meta.symbol+' · local '+(meta.resolvedWin?'WIN':'LOSS')+' but server '+(actualWin?'WIN':'LOSS')+' · correcting','warning');
+  if(!oddEvenEnabled)return;
+  if(actualWin&&!meta.resolvedWin){
+    // We continued after a "loss" that was really a win: stop escalating.
+    if(oeChain)oeChain.abort=true;
+  }else if(!actualWin&&meta.resolvedWin&&!oeChain){
+    // We released after a "win" that was really a loss: re-lock and continue on the next tick.
+    const next=oeNextStakeFrom(meta.stake);
+    if(next>oeMaxStakeAmount()){log('ODD/EVEN · corrected loss hits max stake · not re-locking','warning');return}
+    oeChain={market:meta.symbol,target:meta.target,stake:next,outstanding:null,contracts:[],ignoreUntilEpoch:0,abort:false,failures:0,needEntry:true,lastEpoch:0};
+    oeLockedMarket=meta.symbol;oeLockedTarget=meta.target;oeCurrentStake=next;trading.inFlight=true;
+    oeSetLockedUI('RE-LOCKED after sync correction · '+meta.target+' · '+meta.symbol);
+  }
+}
+// ---- server settlement: P/L, stop loss, cross-check, fallback driver ----
+function oeTradeSettled(profit,meta,c){
+  if(!oddEvenEnabled)return;
+  const stopLoss=oeStopLossAmount(), runPnL=oeRunPnL();
   if(runPnL<=-stopLoss){
-    // STOP LOSS: total session loss has hit the limit. Stop the whole
-    // auto-scan; the user has to press START again to resume.
-    oeStopLossTriggered=true;
-    oeCurrentStake=base;
-    oeRunStartPnL=oeCurrentPnL();
+    oeStopLossTriggered=true;oeCurrentStake=oeNum('oeStake',0.35);oeRunStartPnL=oeCurrentPnL();
     stopOddEven('STOP LOSS HIT · '+accountCurrency+' '+Math.abs(runPnL).toFixed(2)+' loss · trading stopped');
-    $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);
-    $('oeTarget').textContent='STOPPED';
+    $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);$('oeTarget').textContent='STOPPED';
     log('ODD/EVEN STOP LOSS HIT · loss '+accountCurrency+' '+Math.abs(runPnL).toFixed(2)+' · limit '+accountCurrency+' '+stopLoss.toFixed(2),'error');
     return;
   }
-  if(profit>=0){
-    // WIN: return to base stake and release the locked market/direction.
-    oeCurrentStake=base; oddEvenInFlight=false; oeConsecutiveCount=0; oeLastTarget=''; oeRetryPending=false;
-    oeLockedMarket=''; oeLockedTarget='';
-    $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);
-    $('oeTarget').textContent='WAIT';
-    $('oeStatus').textContent='WIN · base stake restored · RESUMING MARKET SCAN';
-  }else{
-    // LOSS: increase stake via martingale, but never past the editable max
-    // stake. Hitting that cap resets back to base stake and gives up this
-    // locked recovery attempt — the bot keeps running and resumes scanning
-    // for a fresh qualifying market rather than stopping entirely.
-    const maxStake=oeMaxStakeAmount(), nextStake=oeCurrentStake*mult;
-    if(nextStake>maxStake){
-      oeCurrentStake=base; oddEvenInFlight=false; oeConsecutiveCount=0; oeLastTarget=''; oeRetryPending=false;
-      oeLockedMarket=''; oeLockedTarget='';
-      $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);
-      $('oeTarget').textContent='WAIT';
-      $('oeStatus').textContent='MAX STAKE REACHED · reset to base '+accountCurrency+' '+base.toFixed(2)+' · RESUMING MARKET SCAN';
-      log('ODD/EVEN MAX STAKE REACHED · next stake would be '+accountCurrency+' '+nextStake.toFixed(2)+' · limit '+accountCurrency+' '+maxStake.toFixed(2)+' · reset to base','error');
+  const exitEpoch=Number((c&&(c.exit_tick_time||c.date_expiry||c.sell_time))||0);
+  oeResolve(meta,profit>=0,'server',exitEpoch);
+}
+// ---- tick handler: runs FIRST on every tick ----
+function oeTriggerTick(x,d,epoch){
+  if(!oddEvenEnabled)return;
+  const chain=oeChain;
+  if(chain){
+    // RECOVERY: only the locked market matters. Keep buying every tick until a win.
+    if(x.code!==chain.market)return;
+    if(epoch&&epoch<=chain.ignoreUntilEpoch)return;
+    const prevEpoch=chain.lastEpoch; if(epoch)chain.lastEpoch=epoch;
+    const meta=chain.outstanding;
+    if(meta){
+      if(!meta.bought||meta.resolved)return;          // not confirmed yet: server result will drive
+      if(epoch&&epoch<=meta.sentAfterEpoch)return;    // stale/out-of-order tick
+      oeResolve(meta,(d%2===0)===(chain.target==='EVEN'),'tick',epoch);
       return;
     }
-    oeCurrentStake=nextStake; oddEvenInFlight=false; oeConsecutiveCount=0; oeRetryPending=true;
-    $('oeNextStake').textContent=accountCurrency+' '+oeCurrentStake.toFixed(2);
-    $('oeStatus').textContent='LOSS · LOCKED '+oeLockedTarget+' · '+oeLockedMarket+' · retrying at '+accountCurrency+' '+oeCurrentStake.toFixed(2);
-    const locked=markets[oeLockedMarket];
-    if(locked&&oeLockedTarget&&oddEvenEnabled){
-      setTimeout(()=>{
-        oeRetryPending=false;
-        if(oddEvenEnabled&&!trading.inFlight&&oeLockedMarket===locked.code&&oeLockedTarget) placeOddEvenTrade(oeLockedTarget,locked);
-      },80);
+    if(chain.needEntry){
+      chain.needEntry=false;
+      if(!oeFireBuy(chain,epoch))oeReleaseChain('Connection lost · recovery stopped','error');
+      else oeSetLockedUI('LOCKED · '+chain.target+' · '+chain.market+' · entry sent at '+accountCurrency+' '+chain.stake.toFixed(2));
     }
-  }
-}
-function oeTriggerTick(x,d){
-  if(!oddEvenEnabled||!isOddEvenMarket(x))return;
-
-  // Recovery mode: ignore every other market and every new qualification.
-  // Keep buying the same EVEN/ODD contract on the same market until it wins.
-  if(oeLockedMarket){
-    if(x.code!==oeLockedMarket || !oeLockedTarget || trading.inFlight || oeRetryPending)return;
-    const a=oeAnalysis(x); updateOddEvenUI(x);
-    $('oeStatus').textContent='LOCKED · '+oeLockedTarget+' · '+x.code+' · waiting for next 1-tick retry';
     return;
   }
-
-  // AUTO SCAN mode (default) checks every qualifying market. A manually selected
-  // market can still be used as a filter if the user chooses one in the dropdown.
+  if(!isOddEvenMarket(x))return;
+  // AUTO SCAN mode (default) watches EVERY 1-second market in parallel, each
+  // with its own independent streak counter — a market is never skipped for
+  // having a weak or "losing" percentage split. The first market on which N
+  // consecutive same-parity digits land fires the trade, whichever market
+  // that is. A manually selected market still filters down to just that one.
   const selected=$('oeMarket')?.value||'__AUTO__';
   if(selected!=='__AUTO__' && x.code!==selected)return;
-  const a=oeAnalysis(x); updateOddEvenUI(x); if(!a||!a.target||trading.inFlight)return;
-  if(oeLastTarget!==a.target || oeLastTarget===''){oeLastTarget=a.target;oeConsecutiveCount=0}
-  const opposite=a.target==='EVEN'?(d%2===1):(d%2===0);
-  if(opposite)oeConsecutiveCount++; else oeConsecutiveCount=0;
-  const needed=Math.max(1,Math.min(10,Math.floor(oeNum('oeConsecutive',3))));
-  $('oeStatus').textContent='SCANNING · '+a.target+' qualified on '+x.code+' · opposite sequence '+oeConsecutiveCount+'/'+needed;
-  if(oeConsecutiveCount>=needed){
-    oeConsecutiveCount=0;
-    placeOddEvenTrade(a.target,x);
+  const mode=$('oeMode')?.value||'both';
+  let st=oeStreaks.get(x.code); if(!st){st={even:0,odd:0};oeStreaks.set(x.code,st)}
+  if(d%2===0){ if(st.odd>0)oeRecordStreak(st.odd); st.even++; st.odd=0; }
+  else { if(st.even>0)oeRecordStreak(st.even); st.odd++; st.even=0; }
+  if(st.even>oeMaxEvenStreak){oeMaxEvenStreak=st.even;$('oeMaxEvenStreak').textContent=String(oeMaxEvenStreak)}
+  if(st.odd>oeMaxOddStreak){oeMaxOddStreak=st.odd;$('oeMaxOddStreak').textContent=String(oeMaxOddStreak)}
+  updateOddEvenUI(x);
+  const needed=Math.max(1,Math.min(20,Math.floor(oeNum('oeConsecutive',3))));
+  let target='';
+  if(st.odd>=needed && mode!=='odd')target='EVEN';        // N odds in a row -> bet EVEN
+  else if(st.even>=needed && mode!=='even')target='ODD';  // N evens in a row -> bet ODD
+  if(!target){
+    const dir=st.odd>=st.even?'ODD':'EVEN', prog=Math.max(st.even,st.odd);
+    $('oeStatus').textContent='SCANNING · '+x.code+' · '+dir+' streak '+prog+'/'+needed;
+    return;
   }
+  oeRecordStreak(target==='EVEN'?st.odd:st.even); // the run that triggered entry is a completed streak too
+  st.even=0;st.odd=0;
+  placeOddEvenTrade(target,x,epoch);
 }
 $('oeStart').onclick=startOddEven;$('oeStop').onclick=()=>stopOddEven();
-$('oeMarket').onchange=()=>oeReset('Market changed · waiting for qualifying distribution');
+$('oeMarket').onchange=()=>oeReset('Market changed · waiting for qualifying distribution',false);
 ['oeSample','oeConsecutive','oeStake','oeMartingale','oeStopLoss','oeMaxStake','oeEvenTrigger','oeOddTrigger','oeMode'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='oeStake'&&(!Number.isFinite(Number(el.value))||Number(el.value)<0.35))el.value='0.35';if(id==='oeStopLoss'&&(!Number.isFinite(Number(el.value))||Number(el.value)<=0))el.value='5.00';if(id==='oeMaxStake'&&(!Number.isFinite(Number(el.value))||Number(el.value)<0.35))el.value='2.80';oeReset('Settings changed · recalculating');})});
 
 window.addEventListener('load',()=>{setTimeout(updateOddEvenMarkets,0)});
