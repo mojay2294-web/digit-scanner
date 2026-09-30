@@ -141,6 +141,9 @@ h1{font-size:19px;margin:4px 0;font-weight:800;letter-spacing:-.02em}
 .brandtext .sub{margin:3px 0 0;font-size:10.5px;color:var(--faint);font-weight:500}
 .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
+.oe-actions .oe-lossmode{grid-column:1/-1;text-transform:none}
+.oe-lossmode{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-line);padding:10px 14px;border-radius:var(--radius-sm);font-weight:700;font-size:12px}
+.oe-lossmode[data-mode="rescan"]{background:var(--warn-dim);color:var(--warn);border-color:var(--warn)}
 /* ===== Theme switcher ===== */
 .theme-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px}
 .theme-bar-label{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
@@ -523,7 +526,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 
 <div class="card oe-card" id="oddEvenStrategyCard">
 <h2>3. Odd / Even Reversion Strategy</h2>
-<div class="section-note">AUTO-SCAN 1-tick strategy for all 1-second Volatility markets. It scans continuously for a qualifying market, enters after the consecutive opposite-parity trigger, then LOCKS to that same market and EVEN/ODD contract. Loss = same contract again with Martingale. WIN = return to base stake and resume scanning for a new qualified market.</div>
+<div class="section-note">AUTO-SCAN 1-tick strategy for all Volatility markets (standard and 1-second). It scans continuously for a qualifying market, enters after the consecutive opposite-parity trigger, then LOCKS to that same market and EVEN/ODD contract. Loss = your choice (button below): CONTINUE buys the same contract again on the same market with Martingale until a win, or STOP &amp; RESCAN ends after one trade and scans for another market. WIN = return to base stake and resume scanning for a new qualified market.</div>
 <div class="oe-controls">
   <div><label>MARKET</label><select id="oeMarket"><option value="">Connect first</option></select></div>
   <div><label>SAMPLE TICKS</label><input id="oeSample" type="number" min="20" max="1000" step="10" value="100"></div>
@@ -544,7 +547,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   <div class="oe-stat"><div class="small">HIGHEST EVEN STREAK</div><strong id="oeMaxEvenStreak">0</strong></div>
   <div class="oe-stat"><div class="small">HIGHEST ODD STREAK</div><strong id="oeMaxOddStreak">0</strong></div>
 </div>
-<div class="oe-actions"><button id="oeStart" class="oe-start" type="button">AUTOFIRE ON</button><button id="oeStop" class="oe-stop" type="button" disabled>AUTOFIRE OFF</button></div>
+<div class="oe-actions"><button id="oeLossMode" class="oe-lossmode" type="button" data-mode="continue" title="Click to switch what happens after a losing trade">AFTER LOSS: CONTINUE ON SAME MARKET</button><button id="oeStart" class="oe-start" type="button">AUTOFIRE ON</button><button id="oeStop" class="oe-stop" type="button" disabled>AUTOFIRE OFF</button></div>
 <div id="oeStatus" class="oe-status">Tracking starts automatically · connect DEMO or REAL to enable autofire.</div>
 </div>
 
@@ -1630,20 +1633,21 @@ let oddEvenEnabled=false, oddEvenInFlight=false, oeCurrentStake=0.35;
 let oeMaxEvenStreak=0, oeMaxOddStreak=0; // highest same-parity run seen this session, across all markets
 const oeStreakFreq=new Map(); // completed streak length -> how many times it has occurred this session (either direction)
 const oeStreaks=new Map(); // market code -> {even,odd} consecutive same-parity tick counts, tracked independently per market
-// AUTO mode scans every available 1-second market. Once an entry is found,
+// AUTO mode scans every available Volatility market (standard and 1-second). Once an entry is found,
 // the strategy locks to that market + EVEN/ODD direction until the trade wins.
 let oeLockedMarket='', oeLockedTarget='', oeRetryPending=false;
 let oeRunStartPnL=0, oeStopLossTriggered=false;
 function isOddEvenMarket(x){
   if(!x)return false;
-  const c=String(x.code||'').toUpperCase(), n=String(x.name||'').toLowerCase();
-  return /^1HZ\d+(V|S)$/.test(c) && (n.includes('volatility') || c.endsWith('V'));
+  // Every Volatility market loaded into `markets` (already filtered by isVol) qualifies:
+  // both the standard R_* indices and the 1-second 1HZ*V indices.
+  return !!String(x.code||'').trim();
 }
 function oeMarkets(){return Object.values(markets).filter(isOddEvenMarket)}
 function updateOddEvenMarkets(){
   const sel=$('oeMarket'); if(!sel)return;
   const list=oeMarkets(); const old=sel.value;
-  sel.innerHTML='<option value="__AUTO__">AUTO SCAN · ALL 1s MARKETS</option>'+list.map(x=>'<option value="'+esc(x.code)+'">'+esc(x.name||x.code)+'</option>').join('');
+  sel.innerHTML='<option value="__AUTO__">AUTO SCAN · ALL MARKETS</option>'+list.map(x=>'<option value="'+esc(x.code)+'">'+esc(x.name||x.code)+'</option>').join('');
   if(old && (old==='__AUTO__'||list.some(x=>x.code===old)))sel.value=old;
   else sel.value='__AUTO__';
 }
@@ -1697,6 +1701,11 @@ let oeChain=null;              // active recovery chain (null = scanning)
 const oeReqMap=new Map();      // req_id -> {meta,kind:'proposal'|'buy'}
 let oeDirectBuy=true, oeDirectConfirmed=false;
 
+function oeLossContinues(){return ($('oeLossMode')?.dataset.mode||'continue')==='continue'}
+function oeSyncLossModeBtn(){
+  const b=$('oeLossMode'); if(!b)return;
+  b.textContent=oeLossContinues()?'AFTER LOSS: CONTINUE ON SAME MARKET':'AFTER LOSS: STOP & RESCAN OTHER MARKETS';
+}
 function oeNextStakeFrom(stake){const mult=Math.max(1,oeNum('oeMartingale',2));return Number((stake*mult).toFixed(2))}
 function oeProjectedPnL(){
   // Settled P/L plus contracts already decided locally but not yet settled by the server.
@@ -1721,7 +1730,7 @@ function startOddEven(){
   const maxStake=oeMaxStakeAmount(); if(maxStake<stake){$('oeMaxStake').value=stake.toFixed(2);$('oeStatus').textContent='Max stake cannot be below the base stake.';return}
   oeCurrentStake=stake;oeRunStartPnL=oeCurrentPnL();oeStopLossTriggered=false;oeSettledContracts.clear();contractMetaById.clear();oeReqMap.clear();oddEvenEnabled=true;
   oeStreaks.forEach(v=>{v.fired=true}); // wait for a fresh run instead of entering mid-run
-  oeReset('AUTOFIRE ON · scanning all 1-second markets · stop loss '+accountCurrency+' '+stopLoss.toFixed(2),true);
+  oeReset('AUTOFIRE ON · scanning all markets · stop loss '+accountCurrency+' '+stopLoss.toFixed(2),true);
   $('oeStart').disabled=true;$('oeStop').disabled=false;
   log('Odd/Even AUTOFIRE ON.','success');
 }
@@ -1816,7 +1825,14 @@ function oeResolve(meta,isWin,source,epoch){
   chain.outstanding=null;
   if(source==='server'&&epoch)chain.ignoreUntilEpoch=Math.max(chain.ignoreUntilEpoch,epoch);
   if(isWin){oeReleaseChain('WIN · base stake restored · RESUMING MARKET SCAN','success');return}
-  // ---- LOSS: go again on the very next tick ----
+  // ---- LOSS ----
+  if(!oeLossContinues()){
+    // STOP & RESCAN mode: one trade only. Release the lock and look for another market.
+    // The market that just lost stays disarmed until its current run breaks.
+    oeReleaseChain('LOSS · one trade only · RESUMING MARKET SCAN on other markets','warning');
+    return;
+  }
+  // CONTINUE mode: go again on the very next tick
   if(chain.abort){oeReleaseChain('Recovery stopped after sync correction · RESUMING MARKET SCAN','warning');return}
   const stopLoss=oeStopLossAmount(), proj=oeProjectedPnL();
   if(proj<=-stopLoss){
@@ -1843,7 +1859,7 @@ function oeMismatch(meta,actualWin){
   if(actualWin&&!meta.resolvedWin){
     // We continued after a "loss" that was really a win: stop escalating.
     if(oeChain)oeChain.abort=true;
-  }else if(!actualWin&&meta.resolvedWin&&!oeChain){
+  }else if(!actualWin&&meta.resolvedWin&&!oeChain&&oeLossContinues()){
     // We released after a "win" that was really a loss: re-lock and continue on the next tick.
     const next=oeNextStakeFrom(meta.stake);
     if(next>oeMaxStakeAmount()){log('ODD/EVEN · corrected loss hits max stake · not re-locking','warning');return}
@@ -1868,7 +1884,7 @@ function oeTradeSettled(profit,meta,c){
 }
 // ---- tick handler: runs FIRST on every tick ----
 function oeTriggerTick(x,d,epoch){
-  // ---- 1. STREAK TRACKING: always on, every 1s market, independent of autofire ----
+  // ---- 1. STREAK TRACKING: always on, every market, independent of autofire ----
   // The counter only resets when parity flips, so a run of 40 is one run of 40,
   // no matter where the entry threshold sits.
   let st=null;
@@ -1926,6 +1942,11 @@ function oeTriggerTick(x,d,epoch){
   st.fired=true; // one entry per run; re-arms only when the run actually breaks
   placeOddEvenTrade(target,x,epoch);
 }
+$('oeLossMode').onclick=()=>{
+  const b=$('oeLossMode'); b.dataset.mode=oeLossContinues()?'rescan':'continue'; oeSyncLossModeBtn();
+  log('ODD/EVEN · after a loss: '+(oeLossContinues()?'CONTINUE on same market':'STOP & RESCAN other markets'),'log');
+};
+oeSyncLossModeBtn();
 $('oeStart').onclick=startOddEven;$('oeStop').onclick=()=>stopOddEven();
 $('oeMarket').onchange=()=>oeReset('Market changed · waiting for qualifying distribution',false);
 ['oeSample','oeConsecutive','oeStake','oeMartingale','oeStopLoss','oeMaxStake','oeEvenTrigger','oeOddTrigger','oeMode'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='oeStake'&&(!Number.isFinite(Number(el.value))||Number(el.value)<0.35))el.value='0.35';if(id==='oeStopLoss'&&(!Number.isFinite(Number(el.value))||Number(el.value)<=0))el.value='5.00';if(id==='oeMaxStake'&&(!Number.isFinite(Number(el.value))||Number(el.value)<0.35))el.value='2.80';oeReset('Settings changed · recalculating');})});
