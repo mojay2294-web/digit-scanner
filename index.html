@@ -212,7 +212,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 
 /* ===== Log ===== */
 #log{height:230px;overflow:auto;background:var(--well);border:1px solid var(--border);border-radius:12px;padding:10px;font:11.5px/1.6 var(--mono)}
-.log{display:none;padding:4px 8px;margin:1px 0;border-left:2px solid var(--blue);border-radius:5px}
+.log{display:block;padding:4px 8px;margin:1px 0;border-left:2px solid var(--blue);border-radius:5px}
 .success{border-color:var(--good);color:var(--good)}
 .error{border-color:var(--bad);color:var(--bad)}
 .warning{border-color:var(--warn);color:var(--warn)}
@@ -451,6 +451,226 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 .brandmark{animation:none}
 #accountVerificationCard{border-image:none}
 .oe-card h2:before,.scanner-section h2:before{background:linear-gradient(180deg,var(--good),var(--good-2))}
+
+/* ===================================================================
+   PHONE / DEFAULT: keep the simple stacked look, in the original order
+   =================================================================== */
+.kpi-strip{display:none}
+.layout{display:flex;flex-direction:column}
+.col-main,.col-side{display:contents}
+#accountVerificationCard{order:1}
+#scannerCard{order:2}
+#stratHub{order:3}
+#oddEvenStrategyCard{order:4}
+#streakCard{order:5}
+#over5Card{order:6}
+#aiFreqCard{order:7}
+#backtestCard{order:8}
+#logCard{order:9}
+#statsCard{order:10}
+#diagCard{order:11}
+
+/* ===================================================================
+   PC: detailed two-column dashboard
+   =================================================================== */
+@media (min-width:1100px){
+  body{max-width:1560px;padding:22px 32px 56px;font-size:14px}
+
+  /* header */
+  .theme-bar{margin-bottom:12px}
+  .topbar{padding:18px 26px;margin-bottom:18px;top:10px}
+  .brandmark{width:48px;height:48px;font-size:20px;border-radius:15px}
+  .brandtext h1{font-size:22px}
+  .brandtext .sub{font-size:12px;margin-top:4px}
+
+  /* KPI strip */
+  .kpi-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:18px}
+  .kpi{
+    padding:16px 18px;border:1px solid var(--border);border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--surface),var(--surface-deep));box-shadow:var(--shadow-card);
+    position:relative;overflow:hidden;
+  }
+  .kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--blue),var(--blue-2))}
+  .kpi .k{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:800}
+  .kpi .v{margin-top:8px;font-family:var(--mono);font-weight:800;font-size:22px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi .v.kpi-acct{font-size:17px}
+  .kpi .v.good{color:var(--good)}
+  .kpi .v.bad{color:var(--bad)}
+
+  /* two columns */
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:20px;align-items:start}
+  .col-main,.col-side{display:flex;flex-direction:column;min-width:0}
+  .col-side{
+    position:sticky;top:104px;max-height:calc(100vh - 124px);
+    overflow-y:auto;overflow-x:hidden;padding:0 4px 4px 0;
+  }
+  /* main column order: scanner, diagnostics, log */
+  #scannerCard{order:1}
+  #backtestCard{order:2}
+  #diagCard{order:3}
+  #logCard{order:4}
+  .card{padding:22px 24px;margin-bottom:18px}
+  h2{font-size:12px;margin-bottom:16px}
+  #accountVerificationCard h2{font-size:12px}
+  #accountVerificationCard,#accountVerificationCard label,#accountVerificationCard .small{font-size:12px}
+  #accountVerificationCard label{font-size:10px}
+  .pat-verify-row{grid-template-columns:minmax(0,1fr) 34px}
+  .pat-field input{height:40px;font-size:13px}
+  #verifyAccount.verify-circle{width:22px!important;height:22px!important;min-width:22px!important;max-width:22px!important;margin:0 6px 9px!important}
+
+  /* scanner table: every column, comfortable size */
+  .scanner-section{padding:22px 0 8px}
+  .scanner-section h2{padding:0 24px}
+  .scanner-section .tablewrap{border-radius:0;border-left:0;border-right:0;max-height:640px;overflow:auto}
+  .tablewrap table{table-layout:auto!important;width:100%;min-width:900px;font-size:12px!important;line-height:1.3}
+  .tablewrap th,.tablewrap td{
+    display:table-cell!important;width:auto!important;min-width:0!important;max-width:none!important;
+    padding:9px 7px!important;font-size:12px!important;border-bottom:1px solid var(--border)!important;
+    overflow:visible!important;text-align:right!important;white-space:nowrap;
+  }
+  .tablewrap th{font-size:10px!important;z-index:2}
+  .tablewrap th:nth-child(1),.tablewrap td:nth-child(1){text-align:left!important;min-width:170px!important;padding-left:24px!important;font-weight:700}
+  .tablewrap th:nth-child(2),.tablewrap td:nth-child(2){text-align:left!important;min-width:70px!important;color:var(--dim)}
+  .tablewrap th:nth-child(3),.tablewrap td:nth-child(3){min-width:92px!important}
+  .tablewrap th:last-child,.tablewrap td:last-child{text-align:center!important;padding-right:20px!important}
+  .tablewrap td.digit-low,.tablewrap td.digit-high{border-radius:0}
+  .tablewrap tbody tr:hover{background:var(--blue-dim)}
+
+  /* odd / even card in the narrow side column */
+  .oe-card{padding:20px}
+  .oe-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .oe-stat strong{font-size:15px}
+  .oe-actions button{min-height:42px}
+  .section-note{font-size:11.5px}
+
+  /* trading stats and activity */
+  .trading-stats-compact .stat{padding:13px 14px!important}
+  .trading-stats-compact .stat .small{font-size:9px!important}
+  .trading-stats-compact .stat .stat-value{font-size:17px!important}
+  .trade-activity{max-height:300px}
+  .activity-row{font-size:11px;padding:10px 12px}
+  .activity-meta{font-size:10px}
+
+  /* log + diagnostics */
+  #log{height:260px}
+  #counts{max-height:300px}
+}
+@media (min-width:1500px){
+  .layout{grid-template-columns:minmax(0,1fr) 420px}
+}
+
+/* ===================================================================
+   PC v2: richer dashboard (phone layout untouched)
+   =================================================================== */
+.top-right{display:none}
+@media (min-width:1100px){
+  body{background-image:radial-gradient(900px 420px at 12% -6%,rgba(91,143,255,.10),transparent 70%),radial-gradient(800px 380px at 96% 4%,rgba(139,107,255,.08),transparent 70%);background-attachment:fixed}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .top-right{display:flex;align-items:center;gap:14px}
+  .conn-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--border-2);background:var(--well);font-size:12px;font-weight:700;color:var(--dim)}
+  .conn-pill i{width:9px;height:9px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 3px var(--bad-dim)}
+  .conn-pill.mid i{background:var(--warn);box-shadow:0 0 0 3px var(--warn-dim)}
+  .conn-pill.on{color:var(--txt);border-color:var(--good-dim)}
+  .conn-pill.on i{background:var(--good);box-shadow:0 0 0 3px var(--good-dim);animation:pulseDot 1.8s ease-in-out infinite}
+  @keyframes pulseDot{50%{box-shadow:0 0 0 6px transparent}}
+  .top-clock{font-family:var(--mono);font-size:13px;color:var(--dim);padding:8px 12px;border-radius:10px;background:var(--well);border:1px solid var(--border)}
+
+  .kpi-strip{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .kpi{transition:transform .15s ease,border-color .15s ease}
+  .kpi:hover{transform:translateY(-2px);border-color:var(--blue-line)}
+
+  .layout{grid-template-columns:minmax(0,1fr) 440px}
+  .col-side{scrollbar-width:thin;scrollbar-color:var(--border-2) transparent}
+  .col-side::-webkit-scrollbar{width:6px}
+  .col-side::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:6px}
+  /* side column order: account, strategy buttons + open panel, then statistics */
+  #accountVerificationCard{order:1}
+  #stratHub{order:2}
+  #oddEvenStrategyCard{order:3}
+  #streakCard{order:4}
+  #over5Card{order:5}
+  #aiFreqCard{order:6}
+  #statsCard{order:7}
+
+  .card{transition:border-color .2s ease,box-shadow .2s ease}
+  .card:hover{border-color:var(--border-2)}
+
+  /* scanner table */
+  .scanner-section .tablewrap{max-height:none}
+  .tablewrap thead th{position:sticky;top:0;background:var(--surface-2)!important;box-shadow:0 1px 0 var(--border-2)}
+  .tablewrap td{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+  .tablewrap td:nth-child(1){font-family:var(--font-sans)}
+  .tablewrap tbody tr:nth-child(even){background:rgba(127,140,170,.045)}
+  .tablewrap tbody tr.candidate{background:linear-gradient(90deg,var(--good-dim),transparent 70%);box-shadow:inset 3px 0 0 var(--good)}
+  .tablewrap td .badge{font-family:var(--font-sans)}
+  .tablewrap td.good{color:var(--good)}
+  .tablewrap td.bad{color:var(--bad)}
+
+  /* strategy card: show controls first, keep the long note compact */
+  .oe-card .section-note{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:help}
+  .oe-card .section-note:hover{-webkit-line-clamp:unset;overflow:visible}
+  .oe-controls{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .oe-controls label{font-size:9px;letter-spacing:.06em}
+  .oe-controls input,.oe-controls select{font-size:12px}
+  .oe-actions{grid-template-columns:1fr 1fr}
+  .oe-actions .oe-lossmode{grid-column:1/-1}
+
+  /* stats card */
+  .trading-stats-compact .grid2{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .trading-stats-compact .stat{background:var(--well);border:1px solid var(--border);border-radius:12px}
+  .trade-activity{max-height:340px;scrollbar-width:thin}
+
+  /* log */
+  #log{height:300px}
+}
+@media (min-width:1100px) and (max-width:1499px){
+  .layout{grid-template-columns:minmax(0,1fr) 410px}
+}
+@media (min-width:1700px){
+  body{max-width:1780px}
+}
+@media (min-width:1100px) and (max-width:1699px){
+  .tablewrap table{min-width:0}
+  .tablewrap th,.tablewrap td{padding:9px 4px!important;font-size:11.5px!important}
+  .tablewrap th:nth-child(2),.tablewrap td:nth-child(2){display:none!important}
+  .tablewrap th:nth-child(1),.tablewrap td:nth-child(1){min-width:150px!important;padding-left:20px!important}
+  .tablewrap th:nth-child(3),.tablewrap td:nth-child(3){min-width:84px!important}
+  .tablewrap th:last-child,.tablewrap td:last-child{padding-right:12px!important}
+}
+@media (min-width:1500px){
+  .layout{grid-template-columns:minmax(0,1fr) 470px}
+  .kpi .v{font-size:24px}
+}
+
+.o5-h3{margin:16px 0 8px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:800}
+
+/* ===== Strategy hub ===== */
+.strat-hidden{display:none!important}
+.strat-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.strat-tabs .strat-tab{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px 12px 32px;border-radius:12px;
+  background:var(--well);border:1px solid var(--border-2);color:var(--txt);box-shadow:none;letter-spacing:0}
+.strat-tabs .strat-tab:hover:not(:disabled){border-color:var(--blue-line);filter:none;transform:none;background:var(--surface-2)}
+.strat-tabs .strat-tab .st-name{font-size:13px;font-weight:800}
+.strat-tabs .strat-tab .st-sub{font-size:10.5px;font-weight:600;color:var(--faint)}
+.strat-tabs .strat-tab .st-dot{position:absolute;left:13px;top:16px;width:9px;height:9px;border-radius:50%;background:var(--border-2)}
+.strat-tabs .strat-tab.on .st-dot{background:var(--good);box-shadow:0 0 0 3px var(--good-dim)}
+.strat-tabs .strat-tab.active{background:var(--blue-dim);border-color:var(--blue);box-shadow:0 0 0 3px var(--focus)}
+.strat-hint{margin-top:12px;color:var(--faint)}
+.o5-verdict{margin-top:10px}
+.bt-wrap.o5-n{margin-top:6px}
+/* ===== Backtest table ===== */
+.bt-wrap{margin-top:12px;overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--well)}
+.bt-table{min-width:0!important;width:100%;font:12px var(--mono);border-collapse:collapse}
+.bt-table th,.bt-table td{padding:9px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)}
+.bt-table th:first-child,.bt-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:700}
+.bt-table tbody tr:last-child td{border-bottom:0}
+.bt-table .v-edge{color:var(--good);font-weight:800}
+.bt-table .v-lose{color:var(--bad)}
+.bt-table .v-none{color:var(--dim)}
+.bt-table tr.bt-best td:first-child{box-shadow:inset 3px 0 0 var(--blue)}
+.bt-table .bt-grp td{background:var(--surface-2);color:var(--faint);font:700 9.5px var(--font-sans);text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:700px){.bt-hide-sm{display:none}.bt-table th,.bt-table td{padding:8px 6px;font-size:11px}.bt-table th:first-child,.bt-table td:first-child{white-space:normal;min-width:108px;max-width:128px;line-height:1.25}}
+@media (min-width:1100px){.bt-controls{grid-template-columns:repeat(7,minmax(0,1fr))!important}}
 </style>
 </head>
 <body>
@@ -463,31 +683,21 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
   </div>
 </div>
 <div class="topbar">
-  <div class="brand"><div class="brandmark">✓</div><div class="brandtext"><h1>Account Verification</h1><div class="sub" id="accountVerifySub">Enter your PAT once · saved securely in this browser</div></div></div>
+  <div class="brand"><div class="brandmark">✓</div><div class="brandtext"><h1>Deriv Digit Scanner Pro</h1><div class="sub" id="accountVerifySub">Enter your PAT once · saved securely in this browser</div></div></div>
+  <div class="top-right"><span class="conn-pill" id="connPill"><i></i><b id="connText">Offline</b></span><span class="top-clock" id="topClock">--:--:--</span></div>
 </div>
-<div class="card" id="accountVerificationCard">
-  <h2>Account Verification</h2>
-  <div class="pat-verify-row">
-    <div class="pat-field"><label>PAT</label><input id="token" type="password" placeholder="pat_..." autocomplete="off"></div>
-    <button id="verifyAccount" class="verify-circle" type="button" aria-label="Verify and save"></button>
-  </div>
-  <input id="appId" type="hidden" value="342UYv1eUbONewrTd7HLr">
-  <div id="verificationStatus" class="small verification-status">Enter your PAT, then verify it.</div>
-  <div id="accountChoiceRow" class="account-mode-buttons" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-    <button id="demoAccountBtn" class="secondary account-choice" disabled><span>DEMO</span><small id="demoBalance">Balance: —</small></button>
-    <button id="realAccountBtn" class="account-choice" disabled><span>REAL</span><small id="realBalance">Balance: —</small></button>
-  </div>
-  <div id="accountList" style="display:none"></div>
-  <div id="selectedAccountStatus" class="small" style="margin-top:7px"></div>
-  <div id="tradeStatus" class="small" style="margin-top:4px"></div>
+<div class="kpi-strip" id="kpiStrip">
+  <div class="kpi"><div class="k">Account</div><div class="v kpi-acct" id="kpiAcct">Not connected</div></div>
+  <div class="kpi"><div class="k">Balance</div><div class="v" id="kpiBalance">—</div></div>
+  <div class="kpi"><div class="k">Session P/L</div><div class="v" id="kpiPnl">—</div></div>
+  <div class="kpi"><div class="k">Trades</div><div class="v" id="kpiTrades">0</div></div>
+  <div class="kpi"><div class="k">Win rate</div><div class="v" id="kpiWin">—</div></div>
+  <div class="kpi"><div class="k">Candidates</div><div class="v" id="kpiCand">0</div></div>
 </div>
 
-
-
-
-
-
-<div class="card scanner-section">
+<div class="layout">
+<div class="col-main">
+<div class="card scanner-section" id="scannerCard">
 <h2>1. Market Digit Scanner</h2>
 <div class="tablewrap"><table>
 <thead><tr><th>Market (Symbol)</th><th>Symbol</th><th>Exact Price</th><th>0%</th><th>1%</th><th>2%</th><th>3%</th><th>4%</th><th>5%</th><th>6%</th><th>7%</th><th>8%</th><th>9%</th><th>Odd%</th><th>Even%</th><th>Status</th></tr></thead>
@@ -524,6 +734,67 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 </div>
 
 
+<div class="card" id="backtestCard">
+<h2>7. Strategy Backtest</h2>
+<div class="section-note" style="margin-bottom:12px">Replays strategies on the tick history already loaded for each market (up to 1,000 ticks each) and reports how often they would have won against the break-even rate. Nothing is traded.</div>
+<div class="oe-controls bt-controls">
+  <div><label>MARKET</label><select id="btMarket"><option value="__ALL__">ALL MARKETS</option></select></div>
+  <div><label>WINDOW (TICKS)</label><input id="btWindow" type="number" min="50" max="900" step="10" value="200"></div>
+  <div><label>MIN CONFIDENCE (Z)</label><input id="btMinZ" type="number" min="1" max="5" step="0.1" value="2"></div>
+  <div><label>MIN GAP (TICKS)</label><input id="btGap" type="number" min="1" max="50" step="1" value="3"></div>
+  <div><label>PAYOUT (%)</label><input id="btPayout" type="number" min="50" max="200" step="0.1" value="88.6"></div>
+  <div><label>STAKE (USD)</label><input id="btStake" type="number" min="0.35" step="0.01" value="0.35"></div>
+  <div><label>OVER 5 PAYOUT (%)</label><input id="btPayout5" type="number" min="50" max="400" step="0.1" value="137"></div>
+</div>
+<div class="oe-actions"><button id="btRun" class="oe-start" type="button" style="grid-column:1/-1">RUN BACKTEST</button></div>
+<div id="btNote" class="oe-status">Connect first, then run. Break-even and every result update with the payout you enter.</div>
+<div class="bt-wrap" id="btWrap" style="display:none"><table class="bt-table"><thead><tr><th>Strategy</th><th>Trades</th><th class="bt-hide-sm">Wins</th><th>Win %</th><th class="bt-hide-sm">95% range</th><th class="bt-hide-sm">Sim P/L</th><th class="bt-hide-sm">z vs B/E</th><th>Verdict</th></tr></thead><tbody id="btBody"></tbody></table></div>
+</div>
+
+<div class="card digit-counts-card" id="diagCard">
+<h2>5. Digit Counts Diagnostic</h2>
+<div class="small">Select a market to verify that all ten digit counts add exactly to the selected tick count.</div>
+<select id="diagMarket"><option value="">Connect first</option></select>
+<pre id="counts">No market selected.</pre>
+</div>
+
+<div class="card" id="logCard"><h2>Log</h2><div id="log"></div></div>
+
+</div>
+<div class="col-side">
+<div class="card" id="accountVerificationCard">
+  <h2>Account Verification</h2>
+  <div class="pat-verify-row">
+    <div class="pat-field"><label>PAT</label><input id="token" type="password" placeholder="pat_..." autocomplete="off"></div>
+    <button id="verifyAccount" class="verify-circle" type="button" aria-label="Verify and save"></button>
+  </div>
+  <input id="appId" type="hidden" value="342UYv1eUbONewrTd7HLr">
+  <div id="verificationStatus" class="small verification-status">Enter your PAT, then verify it.</div>
+  <div id="accountChoiceRow" class="account-mode-buttons" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+    <button id="demoAccountBtn" class="secondary account-choice" disabled><span>DEMO</span><small id="demoBalance">Balance: —</small></button>
+    <button id="realAccountBtn" class="account-choice" disabled><span>REAL</span><small id="realBalance">Balance: —</small></button>
+  </div>
+  <div id="accountList" style="display:none"></div>
+  <div id="selectedAccountStatus" class="small" style="margin-top:7px"></div>
+  <div id="tradeStatus" class="small" style="margin-top:4px"></div>
+</div>
+
+
+
+
+
+
+<div class="card" id="stratHub">
+<h2>Strategies</h2>
+<div class="strat-tabs" id="stratTabs" role="tablist" aria-label="Strategies">
+  <button type="button" class="strat-tab" data-strat="oe" role="tab"><span class="st-dot"></span><span class="st-name">Odd / Even</span><span class="st-sub">Reversion · streaks</span></button>
+  <button type="button" class="strat-tab" data-strat="o5" role="tab"><span class="st-dot"></span><span class="st-name">Over 5</span><span class="st-sub">0–5 run trigger</span></button>
+  <button type="button" class="strat-tab" data-strat="ai" role="tab"><span class="st-dot"></span><span class="st-name">AI Trader</span><span class="st-sub">Frequency z-score</span></button>
+  <button type="button" class="strat-tab" data-strat="bt" role="tab"><span class="st-dot"></span><span class="st-name">Backtest</span><span class="st-sub">Replay stored ticks</span></button>
+</div>
+<div class="small strat-hint" id="stratHint">Choose a strategy to open its controls. A green dot means it is running, and it keeps running while its panel is hidden.</div>
+</div>
+
 <div class="card oe-card" id="oddEvenStrategyCard">
 <h2>3. Odd / Even Reversion Strategy</h2>
 <div class="section-note">AUTO-SCAN 1-tick strategy for all Volatility markets (standard and 1-second). It scans continuously for a qualifying market, enters after the consecutive opposite-parity trigger, then LOCKS to that same market and EVEN/ODD contract. Loss = your choice (button below): CONTINUE buys the same contract again on the same market with Martingale until a win, or STOP &amp; RESCAN ends after one trade and scans for another market. WIN = return to base stake and resume scanning for a new qualified market.</div>
@@ -549,14 +820,71 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 </div>
 <div class="oe-actions"><button id="oeLossMode" class="oe-lossmode" type="button" data-mode="continue" title="Click to switch what happens after a losing trade">AFTER LOSS: CONTINUE ON SAME MARKET</button><button id="oeStart" class="oe-start" type="button">AUTOFIRE ON</button><button id="oeStop" class="oe-stop" type="button" disabled>AUTOFIRE OFF</button></div>
 <div id="oeStatus" class="oe-status">Tracking starts automatically · connect DEMO or REAL to enable autofire.</div>
+<div id="oeLastError" class="oe-status" style="color:var(--warn)">Last trade message: none yet.</div>
 </div>
 
-<div class="card streak-freq-card">
+<div class="card oe-card" id="aiFreqCard">
+<h2>6. AI Frequency Trader</h2>
+<div class="section-note">The AI reads the last N digits of every market and measures how far EVEN/ODD has drifted from 50/50 (z-score). When the drift is strong enough it prepares two possible bets: FOLLOW the more frequent side, or FADE it. It always tests both on paper first, tick by tick, and trades the mode with the better live record. In "Prove edge first" mode it places real trades only when that record is statistically above the 53% break-even; otherwise it just keeps learning. Flat stake, no Martingale.</div>
+<div class="oe-controls">
+  <div><label>STAKE (USD)</label><input id="aiStake" type="number" min="0.35" step="0.01" value="0.35"></div>
+  <div><label>WINDOW (TICKS)</label><input id="aiWindow" type="number" min="50" max="1000" step="10" value="200"></div>
+  <div><label>MIN CONFIDENCE (Z)</label><input id="aiMinZ" type="number" min="1" max="5" step="0.1" value="2"></div>
+  <div><label>MAX TRADES / MIN</label><input id="aiMaxPerMin" type="number" min="1" max="30" step="1" value="6"></div>
+  <div><label>STOP LOSS (USD)</label><input id="aiStopLoss" type="number" min="0.35" step="0.01" value="5.00"></div>
+  <div><label>MIN SAMPLES</label><input id="aiMinSamples" type="number" min="20" max="2000" step="10" value="100"></div>
+  <div style="grid-column:1/-1"><label>TRADING GATE</label><select id="aiGate"><option value="proven">PROVE EDGE FIRST (recommended)</option><option value="always">TRADE EVERY STRONG SIGNAL (demo testing)</option></select></div>
+</div>
+<div class="oe-stat-grid">
+  <div class="oe-stat"><div class="small">FOLLOW (PAPER)</div><strong id="aiMomStat">—</strong></div>
+  <div class="oe-stat"><div class="small">FADE (PAPER)</div><strong id="aiRevStat">—</strong></div>
+  <div class="oe-stat"><div class="small">BREAK-EVEN</div><strong>53.0%</strong></div>
+  <div class="oe-stat"><div class="small">AI TRADES W/L</div><strong id="aiWL">0 / 0</strong></div>
+  <div class="oe-stat"><div class="small">AI P/L</div><strong id="aiPnl">USD 0.00</strong></div>
+  <div class="oe-stat"><div class="small">LAST DECISION</div><strong id="aiLast">—</strong></div>
+</div>
+<div class="oe-actions"><button id="aiStart" class="oe-start" type="button">AI START</button><button id="aiStop" class="oe-stop" type="button" disabled>AI STOP</button></div>
+<div id="aiStatus" class="oe-status">AI is learning from live ticks · press AI START to let it trade.</div>
+</div>
+
+<div class="card oe-card" id="over5Card">
+<h2>8. Over 5 Strategy</h2>
+<div class="section-note">Watches the digits of every Volatility market. When N digits in a row are 0–5, it buys DIGITOVER 5 for 1 tick, once per run (wins if the next digit is 6, 7, 8 or 9). One trade at a time. After a loss the stake is multiplied (set the multiplier to 1 for a flat stake); a win returns to the base stake.</div>
+<div class="oe-controls">
+  <div><label>MARKET</label><select id="o5Market"><option value="__AUTO__">AUTO SCAN · ALL MARKETS</option></select></div>
+  <div><label>CONSECUTIVE 0–5 (N)</label><input id="o5N" type="number" min="1" max="30" step="1" value="5"></div>
+  <div><label>BASE STAKE (USD)</label><input id="o5Stake" type="number" min="0.35" step="0.01" value="0.35"></div>
+  <div><label>MULTIPLIER (1 = FLAT)</label><input id="o5Mult" type="number" min="1" max="10" step="0.1" value="1"></div>
+  <div><label>MAX STAKE (USD)</label><input id="o5MaxStake" type="number" min="0.35" step="0.01" value="2.80"></div>
+  <div><label>STOP LOSS (USD)</label><input id="o5StopLoss" type="number" min="0.35" step="0.01" value="5.00"></div>
+  <div><label>MAX TRADES / MIN</label><input id="o5MaxPerMin" type="number" min="1" max="30" step="1" value="10"></div>
+</div>
+<div class="oe-stat-grid">
+  <div class="oe-stat"><div class="small">LONGEST RUN NOW</div><strong id="o5Cur">—</strong></div>
+  <div class="oe-stat"><div class="small">NEXT STAKE</div><strong id="o5Next">—</strong></div>
+  <div class="oe-stat"><div class="small">BREAK-EVEN</div><strong id="o5BE">after 1st win</strong></div>
+  <div class="oe-stat"><div class="small">TRADES W/L</div><strong id="o5WL">0 / 0</strong></div>
+  <div class="oe-stat"><div class="small">OVER 5 P/L</div><strong id="o5Pnl">USD 0.00</strong></div>
+  <div class="oe-stat"><div class="small">PAPER HIT RATE</div><strong id="o5Paper">—</strong></div>
+</div>
+<div class="oe-actions"><button id="o5Start" class="oe-start" type="button">OVER 5 ON</button><button id="o5Stop" class="oe-stop" type="button" disabled>OVER 5 OFF</button></div>
+<div id="o5Status" class="oe-status">Tracking 0–5 streaks · press OVER 5 ON to let it trade.</div>
+<div id="o5Verdict" class="oe-status o5-verdict">Result check appears after the first triggers.</div>
+<h3 class="o5-h3">Does any trigger length N win? (stored ticks, all markets)</h3>
+<div class="bt-wrap o5-n"><table class="bt-table"><thead><tr><th>N in a row</th><th>Triggers</th><th>Hit rate</th><th class="bt-hide-sm">z vs B/E</th><th>Verdict</th></tr></thead><tbody id="o5NBody"><tr><td colspan="5" class="v-none">Connect first.</td></tr></tbody></table></div>
+<div class="oe-status" style="margin-top:8px">Hit rate = how often the digit right after N low digits was 6, 7, 8 or 9. It must stay above the break-even for the trigger to make money.</div>
+<h3 class="o5-h3">Streak frequency · digits 0–5 in a row</h3>
+<div class="bt-wrap"><table class="bt-table"><thead><tr><th>Length</th><th>Live</th><th>History</th><th class="bt-hide-sm">Expected</th></tr></thead><tbody id="o5FreqBody"><tr><td colspan="4" class="v-none">No streaks recorded yet.</td></tr></tbody></table></div>
+<div id="o5FreqNote" class="oe-status">Counts are completed runs of consecutive digits from 0 to 5.</div>
+<div class="oe-status" style="margin-top:8px"><b>How to read it:</b> “Length 5 · Live 84” means 84 runs lasted exactly 5 digits in a row from 0–5. <b>Live</b> is this session, <b>History</b> is the stored ticks, and <b>Expected</b> is what purely random digits would give. These counts show how <i>common</i> streaks are. They do not change the next digit: after any streak, a 6–9 is still about 40% likely.</div>
+</div>
+
+<div class="card streak-freq-card" id="streakCard">
 <h2>Streak Frequency (This Session)</h2>
 <div id="oeStreakFreqList" class="small">No streaks recorded yet.</div>
 </div>
 
-<div class="card trading-stats-compact">
+<div class="card trading-stats-compact" id="statsCard">
 <h2>4. Trading Statistics</h2>
 <div class="grid2">
   <div class="stat"><div class="small">NO. OF TRADES</div><div id="statTrades" class="stat-value">0</div></div>
@@ -569,11 +897,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:11px/1.6 var(--mono);max-hei
 <div class="activity-panel" style="margin-top:10px"><div class="activity-title">ACTIVITY</div><div id="tradeActivity" class="trade-activity"><div class="activity-empty">No contracts taken yet.</div></div></div>
 </div>
 
-<div class="card digit-counts-card">
-<h2>5. Digit Counts Diagnostic</h2>
-<div class="small">Select a market to verify that all ten digit counts add exactly to the selected tick count.</div>
-<select id="diagMarket"><option value="">Connect first</option></select>
-<pre id="counts">No market selected.</pre>
+</div>
 </div>
 
 <script>
@@ -607,6 +931,47 @@ $('themeDarkBtn').onclick=()=>applyTheme('dark');
 $('themeLightBtn').onclick=()=>applyTheme('light');
 (function(){let saved='dark';try{saved=localStorage.getItem('deriv_theme_v1')||'dark'}catch(e){}applyTheme(saved)})();
 let ws=null,req=0,ping=null,markets={},tradeWS=null,tradeReq=0,tradePing=null,tradeReconnectTimer=null;
+
+// ===== Auto-reconnect (market feed + account socket) =====
+const rc={publicTries:0,tradeTries:0,publicTimer:null,tradeTimer:null,lastType:'',lastTickAt:0,pending:''};
+function rcDelay(n){return Math.min(30000,1500*Math.pow(2,Math.max(0,n-1)))}
+function schedulePublicReconnect(){
+  if(rc.publicTimer)return;
+  const n=++rc.publicTries,d=rcDelay(n);rc.pending='Reconnecting market feed…';
+  rc.publicTimer=setTimeout(()=>{rc.publicTimer=null;rc.pending='';
+    if(ws&&ws.readyState===WebSocket.OPEN)return;
+    log('Auto-reconnect · market feed · attempt '+n,'warning');try{connect()}catch(e){schedulePublicReconnect()}},d);
+}
+function scheduleTradeReconnect(){
+  if(rc.tradeTimer||!rc.lastType||!selectedAccountId)return;
+  const n=++rc.tradeTries,d=rcDelay(n);rc.pending='Reconnecting account…';
+  const ts=$('tradeStatus');if(ts)ts.textContent='Live account connection closed · reconnecting in '+Math.round(d/1000)+'s (attempt '+n+')…';
+  rc.tradeTimer=setTimeout(()=>{rc.tradeTimer=null;rc.pending='';
+    if(tradeWS&&tradeWS.readyState===WebSocket.OPEN)return;
+    log('Auto-reconnect · account · attempt '+n,'warning');
+    connectSelectedAccount(rc.lastType,true)},d);
+}
+function onTradeSocketReopen(isRetry){
+  // Re-attach to any contract still waiting for settlement (subscriptions die with the old socket).
+  if(!isRetry)return;
+  contractMetaById.forEach((meta,cid)=>{try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(cid),subscribe:1,req_id:++tradeReq}))}catch(e){}});
+  try{if(ai&&ai.inFlight&&contractMetaById.size===0)ai.inFlight=false}catch(e){}
+  try{if(o5&&o5.inFlight&&contractMetaById.size===0)o5.inFlight=false}catch(e){}
+  log('Account reconnected · '+contractMetaById.size+' open contract(s) re-checked.','success');
+}
+function rcWatchdog(){
+  try{
+    if(!ws||ws.readyState>1)schedulePublicReconnect();
+    else if(ws.readyState===WebSocket.OPEN&&rc.lastTickAt&&Date.now()-rc.lastTickAt>25000){
+      rc.lastTickAt=Date.now();log('No ticks for 25s · restarting market feed.','warning');try{connect()}catch(e){}
+    }
+    if(rc.lastType&&selectedAccountId&&(!tradeWS||tradeWS.readyState>1))scheduleTradeReconnect();
+  }catch(e){}
+}
+setInterval(rcWatchdog,5000);
+window.addEventListener('online',()=>{rc.publicTries=0;rc.tradeTries=0;rcWatchdog()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)rcWatchdog()});
+
 let trading={inFlight:false};let selectedAccountId='';let activeTradeMeta=null;let contractMetaById=new Map();let oeSettledContracts=new Set();
 let autoTradingEnabled=false;
 let autoState={s1:{},s2:{},s3:{},s4:{},s5:{}};
@@ -687,7 +1052,7 @@ function connect(){
  socket.onopen=()=>{
    if(socket!==ws||generation!==wsGeneration)return;
    setConnected();
-   
+   try{rc.publicTries=0}catch(e){}
    log('Public market-data WebSocket connected.','success');
 
    send({active_symbols:'full',contract_type:['DIGITOVER','DIGITUNDER']});
@@ -707,8 +1072,9 @@ function connect(){
    if(socket!==ws||generation!==wsGeneration)return;
    clearPublicPing();
    ws=null;
-   setDisconnected('Public market-data connection closed. Tap Connect to reconnect.');
+   setDisconnected('Public market-data connection closed · reconnecting automatically…');
    log('Public WebSocket closed.','warning');
+   try{schedulePublicReconnect()}catch(e){}
  };
 
  socket.onmessage=e=>{
@@ -879,6 +1245,9 @@ function handleTick(t){
   // ODD/EVEN RUNS FIRST. Recovery trades must go out the instant the tick
   // arrives, before any other strategy or UI work touches the main thread.
   oeTriggerTick(x,d,Number(t.epoch)||0);
+  rc.lastTickAt=Date.now();
+  try{aiFreqTick(x,d)}catch(e){}
+  try{o5Tick(x,d)}catch(e){}
 
   // Auto-Trader uses OVER 1, UNDER 8, and OVER 2.
   handleAutoTick(x,d);
@@ -1443,13 +1812,14 @@ function clearSavedPat(){
   $('selectedAccountStatus').textContent=''; $('tradeStatus').textContent='';
   setVerificationStatus('Saved PAT cleared.','');
 }
-async function connectSelectedAccount(accountType){
+async function connectSelectedAccount(accountType,isRetry){
   const tok=$('token').value.trim(),app=$('appId').value.trim();
   if(!tok||!app||!accountsListData.length)return;
   let acct=accountsListData.find(a=>String(a.account_type||'').toLowerCase()===String(accountType||'').toLowerCase());
   if(!acct){setVerificationStatus((accountType||'').toUpperCase()+' account not available on this PAT.','bad');return;}
   const id=acct.account_id||acct.loginid;if(!id)return;
-  selectedAccountId=id; accountCurrency=acct.currency||'USD'; autoTradingEnabled=false; trading.inFlight=false; activeTradeMeta=null; contractMetaById.clear(); oeSettledContracts.clear(); autoState={s1:{},s2:{},s3:{},s4:{},s5:{}};  tradeStats={trades:0,won:0,lost:0};
+  selectedAccountId=id; accountCurrency=acct.currency||'USD'; rc.lastType=accountType;
+  if(!isRetry){autoTradingEnabled=false; trading.inFlight=false; activeTradeMeta=null; contractMetaById.clear(); oeSettledContracts.clear(); autoState={s1:{},s2:{},s3:{},s4:{},s5:{}};  tradeStats={trades:0,won:0,lost:0};}
   if(acct.balance!==undefined&&acct.balance!==null){accountBalance=Number(acct.balance);sessionStartBalance=accountBalance;}
   try{localStorage.setItem(savedAccountTypeKey,accountType)}catch(e){}
   $('selectedAccountStatus').textContent=String(accountType).toUpperCase()+' selected · connecting live…';
@@ -1474,12 +1844,15 @@ async function connectSelectedAccount(accountType){
       tradePing=setInterval(()=>{if(socket===tradeWS&&socket.readyState===WebSocket.OPEN)try{socket.send(JSON.stringify({ping:1,req_id:++tradeReq}))}catch(e){}},15000);
       socket.send(JSON.stringify({balance:1,subscribe:1,req_id:++tradeReq}));
       log('LIVE authenticated account connected: '+id,'success');
+      rc.tradeTries=0;
+      try{onTradeSocketReopen(!!isRetry)}catch(e){}
       connect();
     };
     socket.onerror=()=>log('Authenticated account WebSocket error.','error');
-    socket.onclose=()=>{if(socket!==tradeWS)return;if(tradePing){clearInterval(tradePing);tradePing=null}$('tradeStatus').textContent='Live account connection closed.';};
+    socket.onclose=()=>{if(socket!==tradeWS)return;if(tradePing){clearInterval(tradePing);tradePing=null}$('tradeStatus').textContent='Live account connection closed · reconnecting…';try{scheduleTradeReconnect()}catch(e){}};
     socket.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}handleTrade(m)};
-  }catch(e){$('verifyAccount').classList.remove('is-connected'); $('verifyAccount').disabled=false; $('tradeStatus').textContent='Account connection failed.';setVerificationStatus('Verification failed. Check your PAT.','bad');log('Account connection failed: '+e.message,'error');}
+  }catch(e){if(isRetry){$('tradeStatus').textContent='Reconnect failed · retrying…';log('Account reconnect failed: '+e.message,'warning');try{scheduleTradeReconnect()}catch(x){}return}
+    $('verifyAccount').classList.remove('is-connected'); $('verifyAccount').disabled=false; $('tradeStatus').textContent='Account connection failed.';setVerificationStatus('Verification failed. Check your PAT.','bad');log('Account connection failed: '+e.message,'error');}
 }
 async function loadTradingAccounts(autoConnect=false){
   const tok=$('token').value.trim(),app=$('appId').value.trim(); if(!tok||!app)return;
@@ -1529,8 +1902,10 @@ window.addEventListener('load',()=>{if(loadSavedPat()){setVerificationStatus('Sa
 
 function handleTrade(m){
  if(m.req_id&&oeReqMap.has(m.req_id)&&oeHandleTradeMsg(m))return;
+ if(m.req_id&&aiReq.has(m.req_id)&&aiHandleMsg(m))return;
+ if(m.req_id&&o5Req.has(m.req_id)&&o5HandleMsg(m))return;
  if(m.error){
-  const msg='ACCOUNT ERROR: '+m.error.code+' | '+m.error.message; log(msg,'error');
+  const msg='ACCOUNT ERROR: '+m.error.code+' | '+m.error.message; log(msg,'error'); oeShowMsg(msg);
   if(activeTradeMeta){const failedStrategy=activeTradeMeta.strategy;trading.inFlight=false;activeTradeMeta=null;$('autoStatus').textContent='TRADE FAILED · '+(m.error.message||m.error.code||'API error');log('TRADE FAILED · '+failedStrategy.toUpperCase()+' · '+(m.error.code||'Unknown')+' | '+(m.error.message||'API rejected the proposal'),'error');}
   return;
  }
@@ -1557,7 +1932,7 @@ function handleTrade(m){
   $('autoStatus').textContent='LIVE TRADE · '+activeTradeMeta.strategy.toUpperCase()+' · '+activeTradeMeta.symbol+' · '+activeTradeMeta.contract+' '+activeTradeMeta.barrier;
   
   log('AUTO TRADE OPENED · '+activeTradeMeta.strategy.toUpperCase()+' · '+activeTradeMeta.symbol+' · '+activeTradeMeta.contract+' '+activeTradeMeta.barrier+' · 1 tick · stake '+activeTradeMeta.stake.toFixed(2),'success');
-  if(activeTradeMeta.contractId)tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:activeTradeMeta.contractId,subscribe:1,req_id:++tradeReq}));
+  if(activeTradeMeta.contractId)tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(activeTradeMeta.contractId),subscribe:1,req_id:++tradeReq}));
   return;
  }
  if(m.msg_type==='proposal_open_contract'&&m.proposal_open_contract){
@@ -1569,12 +1944,15 @@ function handleTrade(m){
   // stake/symbol of whatever trade is currently active, producing exactly
   // the wrong stake-vs-profit pairings seen in Activity.
   const meta=cid?contractMetaById.get(cid):null;
-  if(!meta)return;
-  if(c.is_sold||c.status==='sold'||c.is_expired){
+  if(!meta){if(!oeSettledContracts.has(cid))oeShowMsg('Contract update for unknown id '+cid+' · status '+c.status);return}
+  oeShowMsg('Contract '+cid+' · status '+c.status+' · is_sold '+c.is_sold+' · profit '+c.profit);
+  const settled=!!c.is_sold||Number(c.is_sold)===1||['sold','won','lost'].includes(String(c.status).toLowerCase())||!!c.is_expired||!!c.is_settleable&&c.exit_tick!==undefined;
+  if(settled){
     if(oeSettledContracts.has(cid))return;
     oeSettledContracts.add(cid);
     contractMetaById.delete(cid);
-    const profit=Number(c.profit||0); const payout=Number(c.payout||0); const label=profit>=0?'WIN':'LOSS';
+    let profit=Number(c.profit);
+    if(!Number.isFinite(profit)){const sp=Number(c.sell_price),bp=Number(c.buy_price);profit=(Number.isFinite(sp)&&Number.isFinite(bp))?sp-bp:(String(c.status).toLowerCase()==='won'?Number(c.payout||0)-meta.stake:-meta.stake)} const payout=Number(c.payout||0); const label=profit>=0?'WIN':'LOSS';
     tradeStats.trades++; if(profit>=0){tradeStats.won++;}else tradeStats.lost++; tradeActivity.unshift({time:Date.now(),strategy:meta.strategy,symbol:meta.symbol,stake:meta.stake,contract:meta.contract,barrier:meta.barrier,profit}); if(tradeActivity.length>100)tradeActivity.pop(); updateTradeStats();
     log((meta.strategy==='odd_even'?'ODD/EVEN TRADE ':'AUTO TRADE ')+label+' · '+meta.strategy.toUpperCase()+' · '+meta.symbol+' · P/L '+profit.toFixed(2),profit>=0?'success':'error');
     if(meta.strategy==='odd_even'){
@@ -1582,6 +1960,10 @@ function handleTrade(m){
       // contract ID (never by activeTradeMeta) and reconciled in oeTradeSettled.
       meta.serverSettled=true;meta.serverProfit=profit;
       oeTradeSettled(profit,meta,c);
+    }else if(meta.strategy==='ai_freq'){
+      aiTradeSettled(profit,meta);
+    }else if(meta.strategy==='over5'){
+      o5TradeSettled(profit,meta,c);
     }else if(activeTradeMeta&&activeTradeMeta.contractId&&String(activeTradeMeta.contractId)===cid){
       $('autoStatus').textContent='READY · last '+label+' · waiting for new trigger';
       trading.inFlight=false;activeTradeMeta=null;
@@ -1699,7 +2081,8 @@ function updateOddEvenUI(x){
 // =====================================================================
 let oeChain=null;              // active recovery chain (null = scanning)
 const oeReqMap=new Map();      // req_id -> {meta,kind:'proposal'|'buy'}
-let oeDirectBuy=true, oeDirectConfirmed=false;
+let oeDirectBuy=true, oeDirectConfirmed=false; // one-step buy (falls back to proposal -> buy automatically if rejected); uses half the API calls
+function oeShowMsg(t){const e=$('oeLastError');if(e)e.textContent=new Date().toLocaleTimeString()+' · '+t}
 
 function oeLossContinues(){return ($('oeLossMode')?.dataset.mode||'continue')==='continue'}
 function oeSyncLossModeBtn(){
@@ -1790,9 +2173,13 @@ function oeHandleTradeMsg(m){
     if(oeChain)oeChain.failures=0;
     if(meta.contractId){
       contractMetaById.set(meta.contractId,meta);
-      try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:meta.contractId,subscribe:1,req_id:++tradeReq}))}catch(e){}
+      try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(meta.contractId),subscribe:1,req_id:++tradeReq}))}catch(e){}
+      // Fallback: if no settlement has been recorded after 6s, ask for the contract state again.
+      const cidFb=meta.contractId;
+      setTimeout(()=>{if(contractMetaById.has(cidFb)&&tradeWS&&tradeWS.readyState===WebSocket.OPEN)try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(cidFb),req_id:++tradeReq}))}catch(e){}},6000);
     }
     log('ODD/EVEN TRADE OPENED · '+meta.symbol+' · '+meta.contract+' · 1 tick · stake '+meta.stake.toFixed(2),'success');
+    oeShowMsg('TRADE OPENED · '+meta.symbol+' · '+meta.contract+' · stake '+meta.stake.toFixed(2));
     return true;
   }
   return false;
@@ -1800,6 +2187,7 @@ function oeHandleTradeMsg(m){
 function oeBuyFailed(meta,ent,err){
   const em=(err&&(err.message||err.code))||'API error';
   log('ODD/EVEN BUY FAILED · '+(err&&err.code||'')+' | '+em,'error');
+  oeShowMsg('BUY FAILED · '+meta.symbol+' · '+meta.contract+' · '+(err&&err.code||'')+' | '+em);
   const chain=oeChain;
   if(!chain||chain.outstanding!==meta)return;
   // First direct buy ever rejected: the API may not accept buy-by-parameters, so fall back to proposal→buy.
@@ -1940,6 +2328,7 @@ function oeTriggerTick(x,d,epoch){
     return;
   }
   st.fired=true; // one entry per run; re-arms only when the run actually breaks
+  oeShowMsg('TRIGGER · '+x.code+' · '+target+' · sending order…');
   placeOddEvenTrade(target,x,epoch);
 }
 $('oeLossMode').onclick=()=>{
@@ -1952,6 +2341,448 @@ $('oeMarket').onchange=()=>oeReset('Market changed · waiting for qualifying dis
 ['oeSample','oeConsecutive','oeStake','oeMartingale','oeStopLoss','oeMaxStake','oeEvenTrigger','oeOddTrigger','oeMode'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='oeStake'&&(!Number.isFinite(Number(el.value))||Number(el.value)<0.35))el.value='0.35';if(id==='oeStopLoss'&&(!Number.isFinite(Number(el.value))||Number(el.value)<=0))el.value='5.00';if(id==='oeMaxStake'&&(!Number.isFinite(Number(el.value))||Number(el.value)<0.35))el.value='2.80';oeReset('Settings changed · recalculating');})});
 
 window.addEventListener('load',()=>{setTimeout(updateOddEvenMarkets,0);setTimeout(()=>{if(!ws)try{connect()}catch(e){}},300)});
+
+
+// ===== AI Frequency Trader (paper-tests FOLLOW vs FADE, trades only on a proven or chosen gate) =====
+const AI_BREAKEVEN=0.53; // win rate needed at ~88.6% payout: 1/(1+0.886)
+const aiReq=new Map();   // req_id -> {meta,kind:'buy'|'proposal'}
+let aiDirect=true;
+const ai={on:false,inFlight:false,sentAt:0,lastTradeAt:0,backoffUntil:0,tradeTimes:[],pnl:0,trades:0,won:0,lost:0,
+  mom:{n:0,w:0},rev:{n:0,w:0},pending:new Map(),lastUi:0,lastStatus:0};
+function aiNum(id,d){const v=Number($(id)&&$(id).value);return Number.isFinite(v)?v:d}
+function aiWilsonLB(w,n,z){z=z||1.28;if(!n)return 0;const p=w/n,z2=z*z;return (p+z2/(2*n)-z*Math.sqrt((p*(1-p)+z2/(4*n))/n))/(1+z2/n)}
+function aiSetStatus(t,force){const now=Date.now();if(!force&&now-ai.lastStatus<700)return;ai.lastStatus=now;const e=$('aiStatus');if(e)e.textContent=t}
+function aiRender(force){
+  const now=Date.now();if(!force&&now-ai.lastUi<500)return;ai.lastUi=now;
+  const f=s=>s.n?((s.w/s.n*100).toFixed(1)+'% · n='+s.n):'—';
+  const set=(id,t)=>{const e=$(id);if(e)e.textContent=t};
+  set('aiMomStat',f(ai.mom));set('aiRevStat',f(ai.rev));set('aiWL',ai.won+' / '+ai.lost);
+  set('aiPnl',(ai.pnl>=0?'+':'-')+accountCurrency+' '+Math.abs(ai.pnl).toFixed(2));
+}
+function aiFreqTick(x,d){
+  const N=Math.max(50,Math.min(1000,Math.floor(aiNum('aiWindow',200))));
+  // 1) learning: score last tick's paper predictions against this digit
+  const pend=ai.pending.get(x.code);
+  if(pend){ai.pending.delete(x.code);const actual=(d%2===0)?'EVEN':'ODD';
+    ai.mom.n++;if(pend.mom===actual)ai.mom.w++;ai.rev.n++;if(pend.rev===actual)ai.rev.w++}
+  // 2) read the frequency
+  const arr=x.digits;if(arr.length<N){aiRender();return}
+  let even=0;for(let i=arr.length-N;i<arr.length;i++)if(arr[i]%2===0)even++;
+  const z=(even-N/2)/Math.sqrt(N/4);
+  if(Math.abs(z)<aiNum('aiMinZ',2)){aiRender();return}
+  const majority=z>0?'EVEN':'ODD',minority=z>0?'ODD':'EVEN';
+  ai.pending.set(x.code,{mom:majority,rev:minority});
+  aiRender();
+  if(!ai.on)return;
+  // 3) decide
+  const now=Date.now();
+  if(ai.pnl<=-aiNum('aiStopLoss',5)){aiStop('Stop loss reached · AI stopped');return}
+  if(ai.inFlight){if(now-ai.sentAt>20000)ai.inFlight=false;else return}
+  if(now<ai.backoffUntil)return;
+  if(now-ai.lastTradeAt<3000)return;
+  ai.tradeTimes=ai.tradeTimes.filter(t=>now-t<60000);
+  if(ai.tradeTimes.length>=aiNum('aiMaxPerMin',6))return;
+  const mean=s=>s.n?s.w/s.n:0.5;
+  const mode=mean(ai.rev)>mean(ai.mom)?'rev':'mom',b=ai[mode],modeName=mode==='rev'?'FADE':'FOLLOW';
+  if($('aiGate').value==='proven'){
+    const need=aiNum('aiMinSamples',100),lb=aiWilsonLB(b.w,b.n);
+    if(b.n<need||lb<=AI_BREAKEVEN){
+      aiSetStatus('LEARNING · best mode '+modeName+' '+(b.n?(b.w/b.n*100).toFixed(1):'—')+'% (n='+b.n+', need n≥'+need+' and proven >'+(AI_BREAKEVEN*100).toFixed(1)+'%, now '+(lb*100).toFixed(1)+'%) · not trading');
+      return;
+    }
+  }
+  const target=mode==='rev'?minority:majority;
+  aiPlace(x,target,modeName,z);
+}
+function aiSend(meta,direct){
+  const rid=++tradeReq;meta.direct=direct;
+  aiReq.set(rid,{meta,kind:direct?'buy':'proposal'});
+  const base={amount:meta.stake,basis:'stake',contract_type:meta.contract,currency:accountCurrency,duration:1,duration_unit:'t',underlying_symbol:meta.symbol};
+  tradeWS.send(JSON.stringify(direct?{buy:1,price:meta.stake,parameters:base,req_id:rid}:Object.assign({proposal:1},base,{req_id:rid})));
+}
+function aiPlace(x,target,modeName,z){
+  if(!tradeWS||tradeWS.readyState!==WebSocket.OPEN||!selectedAccountId)return;
+  const stake=Math.max(0.35,aiNum('aiStake',0.35));
+  const meta={strategy:'ai_freq',symbol:x.code,stake:Number(stake.toFixed(2)),target,contract:target==='EVEN'?'DIGITEVEN':'DIGITODD',barrier:'',mode:modeName,bought:false,contractId:''};
+  ai.inFlight=true;ai.sentAt=ai.lastTradeAt=Date.now();ai.tradeTimes.push(ai.sentAt);
+  try{aiSend(meta,aiDirect)}catch(e){ai.inFlight=false;log('AI send failed: '+e.message,'error');return}
+  const l=$('aiLast');if(l)l.textContent=modeName+' '+target+' · '+x.code;
+  aiSetStatus('ORDER · '+modeName+' → '+target+' on '+x.code+' · z='+z.toFixed(2)+' · stake '+accountCurrency+' '+meta.stake.toFixed(2),true);
+}
+function aiHandleMsg(m){
+  const ent=aiReq.get(m.req_id);if(!ent)return false;aiReq.delete(m.req_id);const meta=ent.meta;
+  if(m.error){
+    const code=m.error.code||'';
+    if(ent.kind==='buy'&&meta.direct&&aiDirect&&code!=='RateLimit'){
+      aiDirect=false;log('AI · one-step buy rejected ('+code+') · switching to proposal → buy','warning');
+      try{aiSend(meta,false);return true}catch(e){}
+    }
+    ai.inFlight=false;ai.backoffUntil=Date.now()+(code==='RateLimit'?15000:3000);
+    log('AI BUY FAILED · '+code+' | '+(m.error.message||''),'error');aiSetStatus('BUY FAILED · '+code+' | '+(m.error.message||''),true);
+    return true;
+  }
+  if(m.msg_type==='proposal'&&m.proposal&&ent.kind==='proposal'){
+    const price=Number(m.proposal.ask_price||meta.stake),rid=++tradeReq;
+    aiReq.set(rid,{meta,kind:'buy'});
+    try{tradeWS.send(JSON.stringify({buy:m.proposal.id,price,req_id:rid}))}catch(e){ai.inFlight=false}
+    return true;
+  }
+  if(m.msg_type==='buy'&&m.buy){
+    meta.bought=true;meta.contractId=String(m.buy.contract_id||'');
+    if(meta.contractId){
+      contractMetaById.set(meta.contractId,meta);
+      try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(meta.contractId),subscribe:1,req_id:++tradeReq}))}catch(e){}
+      const cid=meta.contractId;
+      setTimeout(()=>{if(contractMetaById.has(cid)&&tradeWS&&tradeWS.readyState===WebSocket.OPEN)try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(cid),req_id:++tradeReq}))}catch(e){}},6000);
+    }
+    log('AI TRADE OPENED · '+meta.mode+' · '+meta.symbol+' · '+meta.contract+' · stake '+meta.stake.toFixed(2),'success');
+    return true;
+  }
+  return false;
+}
+function aiTradeSettled(profit,meta){
+  ai.inFlight=false;ai.trades++;if(profit>=0)ai.won++;else ai.lost++;ai.pnl+=profit;
+  aiRender(true);
+  aiSetStatus('SETTLED · '+(profit>=0?'WIN':'LOSS')+' '+(profit>=0?'+':'-')+accountCurrency+' '+Math.abs(profit).toFixed(2)+' · '+meta.mode+' '+meta.target+' · '+meta.symbol,true);
+  if(ai.on&&ai.pnl<=-aiNum('aiStopLoss',5))aiStop('Stop loss reached · AI stopped');
+}
+function aiStart(){
+  if(!selectedAccountId||!tradeWS||tradeWS.readyState!==WebSocket.OPEN){aiSetStatus('Connect DEMO or REAL first.',true);return}
+  let type='';try{type=(localStorage.getItem(savedAccountTypeKey)||'').toLowerCase()}catch(e){}
+  if(type==='real'&&!confirm('You are on your REAL account. The AI has no proven edge and trades real money. Continue?'))return;
+  ai.on=true;ai.inFlight=false;ai.pnl=0;ai.trades=0;ai.won=0;ai.lost=0;ai.tradeTimes=[];ai.backoffUntil=0;
+  $('aiStart').disabled=true;$('aiStop').disabled=false;
+  log('AI Frequency Trader started ('+($('aiGate').value==='proven'?'prove-edge gate':'trade every strong signal')+').','success');
+  aiRender(true);aiSetStatus('AI ON · reading frequencies on all markets…',true);
+}
+function aiStop(reason){
+  ai.on=false;ai.inFlight=false;$('aiStart').disabled=false;$('aiStop').disabled=true;
+  aiSetStatus(typeof reason==='string'?reason:'AI stopped · still learning from live ticks',true);
+  log('AI Frequency Trader stopped'+(typeof reason==='string'?' · '+reason:'')+'.','warning');
+}
+$('aiStart').onclick=aiStart;$('aiStop').onclick=()=>aiStop();
+
+
+// ===== Strategy Backtest (replays stored ticks; trades nothing) =====
+function btWilson(w,n){if(!n)return[0,0];const z=1.96,p=w/n,z2=z*z,den=1+z2/n,c=p+z2/(2*n),m=z*Math.sqrt((p*(1-p)+z2/(4*n))/n);return[(c-m)/den,(c+m)/den]}
+function btRefreshMarkets(){
+  const sel=$('btMarket');if(!sel)return;
+  const codes=Object.keys(markets).sort();
+  if(sel.options.length-1===codes.length)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="__ALL__">ALL MARKETS</option>'+codes.map(c=>'<option value="'+c+'">'+(markets[c].name||c)+' ('+c+')</option>').join('');
+  sel.value=codes.includes(cur)?cur:'__ALL__';
+}
+setInterval(btRefreshMarkets,3000);
+function btStratAlways(d){let w=0;for(let i=1;i<d.length;i++)if(d[i]%2===0)w++;return{n:Math.max(0,d.length-1),w}}
+function btStratFreq(d,N,minZ,gap,follow){
+  let n=0,w=0;if(d.length<=N+1)return{n,w};
+  let even=0;for(let i=0;i<N;i++)if(d[i]%2===0)even++;
+  let next=N-1;const sd=Math.sqrt(N/4);
+  for(let i=N-1;i<d.length-1;i++){
+    if(i>N-1){if(d[i]%2===0)even++;if(d[i-N]%2===0)even--}
+    if(i<next)continue;
+    const z=(even-N/2)/sd;if(Math.abs(z)<minZ)continue;
+    const majority=z>0?0:1,pick=follow?majority:1-majority;
+    n++;if(d[i+1]%2===pick)w++;next=i+gap;
+  }
+  return{n,w};
+}
+function btStratLow(d,k){
+  let n=0,w=0,len=0;
+  for(let i=0;i<d.length-1;i++){
+    if(d[i]<=5)len++;else len=0;
+    if(len===k){n++;if(d[i+1]>5)w++}
+  }
+  return{n,w};
+}
+function btStratRun(d,k,against){
+  let n=0,w=0,par=-1,len=0;
+  for(let i=0;i<d.length-1;i++){
+    const p=d[i]%2;if(p===par)len++;else{par=p;len=1}
+    if(len===k){const pick=against?1-par:par;n++;if(d[i+1]%2===pick)w++}
+  }
+  return{n,w};
+}
+function runBacktest(){
+  const note=$('btNote'),wrap=$('btWrap'),body=$('btBody');
+  btRefreshMarkets();
+  const sel=$('btMarket').value;
+  const list=Object.values(markets).filter(x=>x.digits&&x.digits.length>=100&&(sel==='__ALL__'||x.code===sel));
+  if(!list.length){note.textContent='No tick history loaded yet · connect first, wait for markets to load, then run again.';wrap.style.display='none';return}
+  const N=Math.max(50,Math.min(900,Math.floor(Number($('btWindow').value)||200)));
+  const minZ=Math.max(0.5,Number($('btMinZ').value)||2),gap=Math.max(1,Math.floor(Number($('btGap').value)||3));
+  const payout=Math.max(0.5,(Number($('btPayout').value)||88.6)/100),stake=Math.max(0.35,Number($('btStake').value)||0.35);
+  const be=1/(1+payout);
+  const payout5=Math.max(0.5,(Number($('btPayout5').value)||137)/100),be5=1/(1+payout5);
+  const defs=[['Baselines'],['Always bet EVEN',d=>btStratAlways(d)],
+    ['Frequency · FOLLOW the majority',d=>btStratFreq(d,N,minZ,gap,true)],['Frequency · FADE the majority',d=>btStratFreq(d,N,minZ,gap,false)],
+    ['Bet AGAINST a same-parity run']];
+  for(let k=1;k<=8;k++)defs.push(['Against run of '+k,d=>btStratRun(d,k,true)]);
+  defs.push(['Bet WITH a same-parity run']);
+  for(let k=1;k<=8;k++)defs.push(['With run of '+k,d=>btStratRun(d,k,false)]);
+  defs.push(['Bet OVER 5 after N digits in a row from 0–5']);
+  for(let k=1;k<=8;k++)defs.push(['Over 5 after '+k+' low digit'+(k>1?'s':''),d=>btStratLow(d,k),payout5]);
+  const rows=[];let tested=0,ticks=0;list.forEach(x=>{ticks+=x.digits.length});
+  defs.forEach(df=>{
+    if(df.length===1){rows.push({group:df[0]});return}
+    let n=0,w=0;list.forEach(x=>{const r=df[1](x.digits);n+=r.n;w+=r.w});
+    tested++;
+    const pr=df[2]||payout,bev=1/(1+pr);
+    const lo_hi=btWilson(w,n),sd=Math.sqrt(Math.max(1e-9,n*bev*(1-bev))),z=n?(w-n*bev)/sd:0;
+    rows.push({name:df[0],n,w,rate:n?w/n:0,lo:lo_hi[0],hi:lo_hi[1],pl:w*stake*pr-(n-w)*stake,z,be:bev});
+  });
+  const real=rows.filter(r=>!r.group&&r.n>=30);
+  const best=real.length?real.reduce((a,b)=>b.rate>a.rate?b:a):null;
+  const f=v=>(v>=0?'+':'-')+Math.abs(v).toFixed(2);
+  body.innerHTML=rows.map(r=>{
+    if(r.group)return '<tr class="bt-grp"><td colspan="8">'+r.group+'</td></tr>';
+    if(r.n<30)return '<tr><td>'+r.name+'</td><td>'+r.n+'</td><td class="bt-hide-sm">—</td><td>—</td><td class="bt-hide-sm">—</td><td class="bt-hide-sm">—</td><td class="bt-hide-sm">—</td><td class="v-none">too few trades</td></tr>';
+    const verdict=r.z>=3?'<span class="v-edge">EDGE?</span>':(r.z<=-3?'<span class="v-lose">LOSES</span>':'<span class="v-none">no edge</span>');
+    return '<tr'+(r===best?' class="bt-best"':'')+'><td>'+r.name+'</td><td>'+r.n+'</td><td class="bt-hide-sm">'+r.w+'</td><td class="'+(r.rate>r.be?'good':'bad')+'">'+(r.rate*100).toFixed(1)+'%</td><td class="bt-hide-sm">'+(r.lo*100).toFixed(1)+'–'+(r.hi*100).toFixed(1)+'%</td><td class="'+(r.pl>=0?'good':'bad')+' bt-hide-sm">'+f(r.pl)+'</td><td class="bt-hide-sm">'+r.z.toFixed(1)+'</td><td>'+verdict+'</td></tr>';
+  }).join('');
+  wrap.style.display='block';
+  const edges=real.filter(r=>r.z>=3).length;
+  note.textContent='Replayed '+ticks.toLocaleString()+' ticks across '+list.length+' market'+(list.length>1?'s':'')+' · break-even '+(be*100).toFixed(1)+'% (Even/Odd, '+(payout*100).toFixed(1)+'% payout), '+(be5*100).toFixed(1)+'% (Over 5, '+(payout5*100).toFixed(1)+'% payout) · '+tested+' strategies tested. '+
+    (edges?edges+' passed z≥3 (still verify on fresh ticks, with this many strategies a few lucky ones are expected).':'None cleared z≥3, so none shows a real edge. With '+tested+' strategies tested, a few will look good by chance, which is why z≥3 is required.');
+}
+$('btRun').onclick=runBacktest;
+
+
+// ===== Over 5 strategy: buy DIGITOVER 5 after N consecutive digits from 0-5 =====
+const o5Req=new Map();
+let o5Direct=true;
+const o5={on:false,inFlight:false,sentAt:0,lastTradeAt:0,backoffUntil:0,tradeTimes:[],nextStake:0.35,
+  pnl:0,trades:0,won:0,lost:0,streak:new Map(),liveFreq:new Map(),paper:{n:0,w:0},pendingPaper:new Map(),
+  payoutRatio:null,lastUi:0,lastTable:0,lastStatus:0};
+function o5Num(id,d){const v=Number($(id)&&$(id).value);return Number.isFinite(v)?v:d}
+function o5SetStatus(t,force){const now=Date.now();if(!force&&now-o5.lastStatus<700)return;o5.lastStatus=now;const e=$('o5Status');if(e)e.textContent=t}
+function o5RefreshMarkets(){
+  const sel=$('o5Market');if(!sel)return;const codes=Object.keys(markets).sort();
+  if(sel.options.length-1===codes.length)return;const cur=sel.value;
+  sel.innerHTML='<option value="__AUTO__">AUTO SCAN · ALL MARKETS</option>'+codes.map(c=>'<option value="'+c+'">'+(markets[c].name||c)+' ('+c+')</option>').join('');
+  sel.value=codes.includes(cur)?cur:'__AUTO__';
+}
+setInterval(o5RefreshMarkets,3000);
+function o5HistoryRuns(){
+  const freq=new Map();let total=0;
+  Object.values(markets).forEach(x=>{
+    const d=x.digits||[];let len=0;
+    for(let i=0;i<d.length;i++){
+      if(d[i]<=5)len++;
+      else if(len>0){freq.set(len,(freq.get(len)||0)+1);total++;len=0}
+    }
+  });
+  return{freq,total};
+}
+
+function o5Verdict(w,n,be){
+  if(n<30)return{txt:'too early',cls:'v-none',z:0};
+  const z=(w-n*be)/Math.sqrt(n*be*(1-be));
+  return z>=3?{txt:'EDGE?',cls:'v-edge',z}:(z<=-3?{txt:'LOSES',cls:'v-lose',z}:{txt:'no edge',cls:'v-none',z});
+}
+function o5RenderVerdict(){
+  const el=$('o5Verdict');if(!el)return;
+  const be=1/(1+(o5.payoutRatio||1.371));
+  const live=o5.trades?o5Verdict(o5.won,o5.trades,be):null,pap=o5.paper.n?o5Verdict(o5.paper.w,o5.paper.n,be):null;
+  if(!o5.trades&&!o5.paper.n){el.textContent='Result check appears after the first triggers.';return}
+  let t='Break-even '+(be*100).toFixed(1)+'% · random digits give 40.0%.';
+  if(o5.paper.n)t+=' Paper: '+(o5.paper.w/o5.paper.n*100).toFixed(1)+'% (n='+o5.paper.n+') → '+pap.txt+'.';
+  if(o5.trades)t+=' Real trades: '+(o5.won/o5.trades*100).toFixed(1)+'% (n='+o5.trades+') → '+live.txt+'.';
+  el.textContent=t;
+}
+function o5RenderNTable(force){
+  const body=$('o5NBody');if(!body)return;
+  const now=Date.now();if(!force&&now-(o5.lastN||0)<2500)return;o5.lastN=now;
+  const list=Object.values(markets).filter(x=>x.digits&&x.digits.length>=100);
+  if(!list.length){body.innerHTML='<tr><td colspan="5" class="v-none">Connect first.</td></tr>';return}
+  const be=1/(1+(o5.payoutRatio||1.371));let rows='';
+  const cur=Math.max(1,Math.min(30,Math.floor(o5Num('o5N',5))));
+  for(let k=1;k<=10;k++){
+    let n=0,w=0;list.forEach(x=>{const r=btStratLow(x.digits,k);n+=r.n;w+=r.w});
+    const v=o5Verdict(w,n,be);
+    rows+='<tr'+(k===cur?' class="bt-best"':'')+'><td>'+k+(k===cur?' · yours':'')+'</td><td>'+n+'</td><td class="'+(n&&w/n>be?'good':'bad')+'">'+(n?(w/n*100).toFixed(1)+'%':'—')+'</td><td class="bt-hide-sm">'+(n>=30?v.z.toFixed(1):'—')+'</td><td class="'+v.cls+'">'+v.txt+'</td></tr>';
+  }
+  body.innerHTML=rows;
+}
+function o5RenderTable(force){
+  const now=Date.now();if(!force&&now-o5.lastTable<2000)return;o5.lastTable=now;
+  const body=$('o5FreqBody'),note=$('o5FreqNote');if(!body)return;
+  const h=o5HistoryRuns();let liveTotal=0;o5.liveFreq.forEach(v=>liveTotal+=v);
+  let maxLen=0;h.freq.forEach((v,k)=>{if(k>maxLen)maxLen=k});o5.liveFreq.forEach((v,k)=>{if(k>maxLen)maxLen=k});
+  if(!h.total&&!liveTotal){body.innerHTML='<tr><td colspan="4" class="v-none">No streaks recorded yet.</td></tr>';return}
+  maxLen=Math.min(24,Math.max(8,maxLen));
+  const N=Math.max(1,Math.min(30,Math.floor(o5Num('o5N',5))));
+  let rows='';
+  for(let L=1;L<=maxLen;L++){
+    const lv=o5.liveFreq.get(L)||0,hv=h.freq.get(L)||0,ex=h.total*0.4*Math.pow(0.6,L-1);
+    rows+='<tr'+(L===N?' class="bt-best"':'')+'><td>'+L+(L===N?' · trigger':'')+'</td><td>'+lv+'</td><td>'+hv+'</td><td class="bt-hide-sm v-none">'+ex.toFixed(1)+'</td></tr>';
+  }
+  body.innerHTML=rows;
+  let lr=0,hr=0;o5.liveFreq.forEach((v,k)=>{if(k>=N)lr+=v});h.freq.forEach((v,k)=>{if(k>=N)hr+=v});
+  const th=Math.pow(0.6,N-1)*100;
+  note.textContent='Runs reaching '+N+'+ digits: live '+lr+' of '+liveTotal+(liveTotal?' ('+(lr/liveTotal*100).toFixed(1)+'%)':'')+' · history '+hr+' of '+h.total+(h.total?' ('+(hr/h.total*100).toFixed(1)+'%)':'')+' · random theory '+th.toFixed(1)+'%. Random digits give each run length about 0.6× the count of the one before it.';
+}
+function o5Render(force){
+  const now=Date.now();if(!force&&now-o5.lastUi<500)return;o5.lastUi=now;
+  const set=(id,t)=>{const e=$(id);if(e)e.textContent=t};
+  let best=null;o5.streak.forEach((st,code)=>{if(!best||st.len>best.len)best={code,len:st.len}});
+  const N=Math.max(1,Math.floor(o5Num('o5N',5)));
+  set('o5Cur',best&&best.len>0?(best.code+' · '+best.len+'/'+N):'—');
+  set('o5Next',accountCurrency+' '+o5.nextStake.toFixed(2));
+  set('o5WL',o5.won+' / '+o5.lost);
+  set('o5Pnl',(o5.pnl>=0?'+':'-')+accountCurrency+' '+Math.abs(o5.pnl).toFixed(2));
+  set('o5BE',o5.payoutRatio?((1/(1+o5.payoutRatio))*100).toFixed(1)+'%':'after 1st win');
+  set('o5Paper',o5.paper.n?((o5.paper.w/o5.paper.n*100).toFixed(1)+'% · n='+o5.paper.n):'—');
+  o5RenderVerdict();
+  o5RenderNTable(force);
+  o5RenderTable(force);
+}
+function o5Tick(x,d){
+  const N=Math.max(1,Math.min(30,Math.floor(o5Num('o5N',5))));
+  let st=o5.streak.get(x.code);if(!st){st={len:0,fired:false};o5.streak.set(x.code,st)}
+  // paper result of last tick's trigger
+  if(o5.pendingPaper.has(x.code)){o5.pendingPaper.delete(x.code);o5.paper.n++;if(d>5)o5.paper.w++}
+  if(d<=5)st.len++;
+  else{if(st.len>0)o5.liveFreq.set(st.len,(o5.liveFreq.get(st.len)||0)+1);st.len=0;st.fired=false}
+  if(st.len>=N&&!st.fired){
+    const sel=$('o5Market')?$('o5Market').value:'__AUTO__';
+    if(sel==='__AUTO__'||sel===x.code){
+      st.fired=true;o5.pendingPaper.set(x.code,1);
+      if(o5.on)o5TryTrade(x,st.len);
+    }
+  }else if(o5.on&&!o5.inFlight){
+    let best=0;o5.streak.forEach(s=>{if(s.len>best)best=s.len});
+    o5SetStatus('OVER 5 ON · scanning · longest 0–5 run '+best+'/'+N+' · next stake '+accountCurrency+' '+o5.nextStake.toFixed(2));
+  }
+  o5Render();
+}
+function o5TryTrade(x,len){
+  const now=Date.now();
+  if(!tradeWS||tradeWS.readyState!==WebSocket.OPEN||!selectedAccountId)return;
+  if(o5.pnl<=-o5Num('o5StopLoss',5)){o5Stop('Stop loss reached · Over 5 stopped');return}
+  if(o5.inFlight){if(now-o5.sentAt>20000)o5.inFlight=false;else return}
+  if(now<o5.backoffUntil)return;
+  o5.tradeTimes=o5.tradeTimes.filter(t=>now-t<60000);
+  if(o5.tradeTimes.length>=o5Num('o5MaxPerMin',10))return;
+  const stake=Number(Math.max(0.35,o5.nextStake).toFixed(2));
+  const meta={strategy:'over5',symbol:x.code,stake,contract:'DIGITOVER',barrier:'5',target:'OVER 5',run:len,bought:false,contractId:''};
+  o5.inFlight=true;o5.sentAt=o5.lastTradeAt=now;o5.tradeTimes.push(now);
+  try{o5Send(meta,o5Direct)}catch(e){o5.inFlight=false;log('Over 5 send failed: '+e.message,'error');return}
+  o5SetStatus('ORDER · OVER 5 on '+x.code+' after '+len+' digits 0–5 · stake '+accountCurrency+' '+stake.toFixed(2),true);
+}
+function o5Send(meta,direct){
+  const rid=++tradeReq;meta.direct=direct;o5Req.set(rid,{meta,kind:direct?'buy':'proposal'});
+  const base={amount:meta.stake,basis:'stake',contract_type:'DIGITOVER',currency:accountCurrency,duration:1,duration_unit:'t',barrier:'5',underlying_symbol:meta.symbol};
+  tradeWS.send(JSON.stringify(direct?{buy:1,price:meta.stake,parameters:base,req_id:rid}:Object.assign({proposal:1},base,{req_id:rid})));
+}
+function o5HandleMsg(m){
+  const ent=o5Req.get(m.req_id);if(!ent)return false;o5Req.delete(m.req_id);const meta=ent.meta;
+  if(m.error){
+    const code=m.error.code||'';
+    if(ent.kind==='buy'&&meta.direct&&o5Direct&&code!=='RateLimit'){
+      o5Direct=false;log('OVER 5 · one-step buy rejected ('+code+') · switching to proposal → buy','warning');
+      try{o5Send(meta,false);return true}catch(e){}
+    }
+    o5.inFlight=false;o5.backoffUntil=Date.now()+(code==='RateLimit'?15000:3000);
+    log('OVER 5 BUY FAILED · '+code+' | '+(m.error.message||''),'error');o5SetStatus('BUY FAILED · '+code+' | '+(m.error.message||''),true);return true;
+  }
+  if(m.msg_type==='proposal'&&m.proposal&&ent.kind==='proposal'){
+    const price=Number(m.proposal.ask_price||meta.stake),rid=++tradeReq;
+    try{const pay=Number(m.proposal.payout);if(pay>price)o5LearnPayout((pay-price)/price)}catch(e){}
+    o5Req.set(rid,{meta,kind:'buy'});
+    try{tradeWS.send(JSON.stringify({buy:m.proposal.id,price,req_id:rid}))}catch(e){o5.inFlight=false}
+    return true;
+  }
+  if(m.msg_type==='buy'&&m.buy){
+    meta.bought=true;meta.contractId=String(m.buy.contract_id||'');
+    try{const bp=Number(m.buy.buy_price),pay=Number(m.buy.payout);if(bp>0&&pay>bp)o5LearnPayout((pay-bp)/bp)}catch(e){}
+    if(meta.contractId){
+      contractMetaById.set(meta.contractId,meta);
+      try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(meta.contractId),subscribe:1,req_id:++tradeReq}))}catch(e){}
+      const cid=meta.contractId;
+      setTimeout(()=>{if(contractMetaById.has(cid)&&tradeWS&&tradeWS.readyState===WebSocket.OPEN)try{tradeWS.send(JSON.stringify({proposal_open_contract:1,contract_id:Number(cid),req_id:++tradeReq}))}catch(e){}},6000);
+    }
+    log('OVER 5 TRADE OPENED · '+meta.symbol+' · after '+meta.run+' digits 0–5 · stake '+meta.stake.toFixed(2),'success');
+    return true;
+  }
+  return false;
+}
+function o5LearnPayout(ratio){
+  if(!(ratio>0.1&&ratio<10))return;
+  o5.payoutRatio=ratio;const e=$('btPayout5');if(e)e.value=(ratio*100).toFixed(1);
+}
+function o5TradeSettled(profit,meta,c){
+  o5.inFlight=false;o5.trades++;o5.pnl+=profit;
+  if(profit>=0){o5.won++;o5.nextStake=Math.max(0.35,o5Num('o5Stake',0.35));
+    const bp=Number((c&&c.buy_price)||meta.stake);if(bp>0)o5LearnPayout(profit/bp)}
+  else{o5.lost++;const mult=Math.max(1,o5Num('o5Mult',1)),cap=Math.max(0.35,o5Num('o5MaxStake',2.8));
+    o5.nextStake=Math.min(cap,Number((meta.stake*mult).toFixed(2)))}
+  o5Render(true);
+  o5SetStatus('SETTLED · '+(profit>=0?'WIN':'LOSS')+' '+(profit>=0?'+':'-')+accountCurrency+' '+Math.abs(profit).toFixed(2)+' · '+meta.symbol+' · next stake '+accountCurrency+' '+o5.nextStake.toFixed(2),true);
+  if(o5.on&&o5.pnl<=-o5Num('o5StopLoss',5))o5Stop('Stop loss reached · Over 5 stopped');
+}
+function o5Start(){
+  if(!selectedAccountId||!tradeWS||tradeWS.readyState!==WebSocket.OPEN){o5SetStatus('Connect DEMO or REAL first.',true);return}
+  const base=o5Num('o5Stake',0.35);if(base<0.35){$('o5Stake').value='0.35';o5SetStatus('Base stake must be at least 0.35.',true);return}
+  let type='';try{type=(localStorage.getItem(savedAccountTypeKey)||'').toLowerCase()}catch(e){}
+  if(type==='real'&&!confirm('You are on your REAL account. Over 5 wins only 40% of the time and its streak trigger has no proven edge. Continue?'))return;
+  o5.on=true;o5.inFlight=false;o5.pnl=0;o5.trades=0;o5.won=0;o5.lost=0;o5.tradeTimes=[];o5.backoffUntil=0;o5.nextStake=base;
+  // wait for a fresh run instead of entering mid-run
+  o5.streak.forEach(st=>{st.fired=true});
+  $('o5Start').disabled=true;$('o5Stop').disabled=false;
+  log('Over 5 strategy ON · trigger '+Math.floor(o5Num('o5N',5))+' digits in a row from 0–5.','success');
+  o5Render(true);o5SetStatus('OVER 5 ON · scanning all markets for a fresh run…',true);
+}
+function o5Stop(reason){
+  o5.on=false;o5.inFlight=false;$('o5Start').disabled=false;$('o5Stop').disabled=true;
+  o5SetStatus(typeof reason==='string'?reason:'Over 5 OFF · still tracking 0–5 streaks',true);
+  log('Over 5 strategy stopped'+(typeof reason==='string'?' · '+reason:'')+'.','warning');
+}
+$('o5Start').onclick=o5Start;$('o5Stop').onclick=()=>o5Stop();
+$('o5N').addEventListener('change',()=>o5Render(true));
+
+
+// ===== Strategy hub: one panel open at a time =====
+const STRAT_PANELS={oe:['oddEvenStrategyCard','streakCard'],o5:['over5Card'],ai:['aiFreqCard'],bt:['backtestCard']};
+const STRAT_HINT={oe:'Odd / Even reversion · bets against a same-parity run.',o5:'Over 5 · buys DIGITOVER 5 after N digits in a row from 0–5.',ai:'AI Trader · reads EVEN/ODD frequency and tests FOLLOW vs FADE.',bt:'Backtest · replays the stored ticks, trades nothing.'};
+let stratOpen='';
+function stratShow(key){
+  stratOpen=(key&&STRAT_PANELS[key])?key:'';
+  Object.keys(STRAT_PANELS).forEach(k=>STRAT_PANELS[k].forEach(id=>{const e=$(id);if(e)e.classList.toggle('strat-hidden',k!==stratOpen)}));
+  document.querySelectorAll('#stratTabs .strat-tab').forEach(b=>{const a=b.dataset.strat===stratOpen;b.classList.toggle('active',a);b.setAttribute('aria-selected',a?'true':'false')});
+  const h=$('stratHint');if(h)h.textContent=stratOpen?STRAT_HINT[stratOpen]:'Choose a strategy to open its controls. A green dot means it is running, and it keeps running while its panel is hidden.';
+  try{localStorage.setItem('deriv_strat_tab_v1',stratOpen)}catch(e){}
+}
+function stratDots(){
+  const on={oe:!!oddEvenEnabled,o5:!!o5.on,ai:!!ai.on,bt:false};
+  document.querySelectorAll('#stratTabs .strat-tab').forEach(b=>b.classList.toggle('on',!!on[b.dataset.strat]));
+}
+document.querySelectorAll('#stratTabs .strat-tab').forEach(b=>{b.onclick=()=>stratShow(stratOpen===b.dataset.strat?'':b.dataset.strat)});
+(function(){let k='';try{k=localStorage.getItem('deriv_strat_tab_v1')||''}catch(e){}stratShow(k)})();
+stratDots();setInterval(stratDots,700);
+
+// ===== PC KPI strip (display only; no effect on trading logic) =====
+function updateKpis(){
+  try{
+    const set=(id,t,cls)=>{const e=$(id);if(!e)return;e.textContent=t;if(cls!==undefined){e.classList.remove('good','bad');if(cls)e.classList.add(cls)}};
+    let type='';try{type=(localStorage.getItem(savedAccountTypeKey)||'').toUpperCase()}catch(e){}
+    const live=!!(selectedAccountId&&tradeWS&&tradeWS.readyState===WebSocket.OPEN);
+    set('kpiAcct',live?((type||'DEMO')+' · '+selectedAccountId):'Not connected');
+    set('kpiBalance',(accountBalance!==null&&accountBalance!==undefined&&Number.isFinite(Number(accountBalance)))?(accountCurrency+' '+Number(accountBalance).toFixed(2)):'—');
+    const pnl=tradeActivity.reduce((a,t)=>{const p=Number(t.profit);return a+(Number.isFinite(p)?p:0)},0);
+    set('kpiPnl',(pnl>=0?'+':'-')+accountCurrency+' '+Math.abs(pnl).toFixed(2),pnl>0?'good':pnl<0?'bad':'');
+    set('kpiTrades',String(tradeStats.trades));
+    set('kpiWin',tradeStats.trades?(tradeStats.won/tradeStats.trades*100).toFixed(1)+'%':'—');
+    const cand=document.querySelectorAll('#body012 tr.candidate').length;
+    set('kpiCand',String(cand),cand>0?'good':'');
+    const pub=!!(ws&&ws.readyState===WebSocket.OPEN);
+    const pill=$('connPill'),ct=$('connText');
+    if(pill&&ct){pill.classList.toggle('on',live);pill.classList.toggle('mid',!live&&pub);ct.textContent=live?((type||'DEMO')+' · LIVE'):(rc.pending||(pub?'Market data only':'Offline'))}
+    const ck=$('topClock');if(ck)ck.textContent=new Date().toLocaleTimeString([], {hour12:false});
+  }catch(e){}
+}
+updateKpis();setInterval(updateKpis,1000);
 window.addEventListener('beforeunload',()=>{if(accountBalancePoll)clearInterval(accountBalancePoll);clearPublicPing();if(tradePing)clearInterval(tradePing);if(tradeReconnectTimer)clearTimeout(tradeReconnectTimer);try{if(ws)ws.close()}catch(e){}try{if(tradeWS)tradeWS.close()}catch(e){}});
 </script>
 </body>
